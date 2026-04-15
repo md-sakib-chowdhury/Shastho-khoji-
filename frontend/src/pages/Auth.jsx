@@ -1,25 +1,25 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
-import { loginApi, registerApi } from "../api/authApi";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { loginApi, registerApi } from '../api/authApi';
 
 export function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
-    const [form, setForm] = useState({ phone: "", password: "" });
-    const [error, setError] = useState("");
+    const [form, setForm] = useState({ phone: '', password: '' });
+    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
+        setError('');
         setLoading(true);
         try {
             const res = await loginApi(form);
             login(res.data);
-            navigate("/");
+            navigate('/');
         } catch (err) {
-            setError(err.response?.data?.message || "Login হয়নি, আবার চেষ্টা করুন");
+            setError(err.response?.data?.message || 'Login হয়নি, আবার চেষ্টা করুন');
         } finally {
             setLoading(false);
         }
@@ -61,11 +61,11 @@ export function Login() {
                         />
                     </div>
                     <button type="submit" disabled={loading} className="btn-primary w-full">
-                        {loading ? "প্রবেশ হচ্ছে..." : "Login করুন"}
+                        {loading ? 'প্রবেশ হচ্ছে...' : 'Login করুন'}
                     </button>
                 </form>
                 <p className="text-center text-sm text-gray-500 mt-4">
-                    নতুন ব্যবহারকারী?{" "}
+                    নতুন ব্যবহারকারী?{' '}
                     <Link to="/register" className="text-green-600 font-medium">নিবন্ধন করুন</Link>
                 </p>
             </div>
@@ -76,20 +76,20 @@ export function Login() {
 export function Register() {
     const { login } = useAuth();
     const navigate = useNavigate();
-    const [form, setForm] = useState({ name: "", phone: "", email: "", password: "" });
-    const [error, setError] = useState("");
+    const [form, setForm] = useState({ name: '', phone: '', email: '', password: '' });
+    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
+        setError('');
         setLoading(true);
         try {
             const res = await registerApi(form);
             login(res.data);
-            navigate("/");
+            navigate('/');
         } catch (err) {
-            setError(err.response?.data?.message || "নিবন্ধন হয়নি");
+            setError(err.response?.data?.message || 'নিবন্ধন হয়নি');
         } finally {
             setLoading(false);
         }
@@ -152,11 +152,11 @@ export function Register() {
                         />
                     </div>
                     <button type="submit" disabled={loading} className="btn-primary w-full">
-                        {loading ? "নিবন্ধন হচ্ছে..." : "নিবন্ধন করুন"}
+                        {loading ? 'নিবন্ধন হচ্ছে...' : 'নিবন্ধন করুন'}
                     </button>
                 </form>
                 <p className="text-center text-sm text-gray-500 mt-4">
-                    আগে থেকেই আছেন?{" "}
+                    আগে থেকেই আছেন?{' '}
                     <Link to="/login" className="text-green-600 font-medium">Login করুন</Link>
                 </p>
             </div>
