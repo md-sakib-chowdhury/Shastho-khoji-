@@ -1,9 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
-export default function Navbar() {
-    const { user, logout } = useAuth();
+function Navbar() { // এখানে export default সরিয়ে দিয়েছি
+    const auth = useAuth();
     const navigate = useNavigate();
+
+    if (!auth) return null;
+
+    const { user, logout } = auth;
 
     const handleLogout = () => {
         logout();
@@ -26,12 +30,18 @@ export default function Navbar() {
                             <Link to="/appointments" className="text-gray-600 hover:text-green-600 text-sm font-medium">
                                 অ্যাপয়েন্টমেন্ট
                             </Link>
-                            <button onClick={handleLogout} className="text-sm text-red-500 hover:text-red-600">
+                            <button
+                                onClick={handleLogout}
+                                className="text-sm text-red-500 hover:text-red-600 font-medium"
+                            >
                                 Logout
                             </button>
                         </>
                     ) : (
-                        <Link to="/login" className="btn-primary text-sm">
+                        <Link
+                            to="/login"
+                            className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700"
+                        >
                             Login
                         </Link>
                     )}
@@ -40,3 +50,5 @@ export default function Navbar() {
         </nav>
     );
 }
+
+export default Navbar; // শুধু এই এক জায়গায় এক্সপোর্ট থাকবে

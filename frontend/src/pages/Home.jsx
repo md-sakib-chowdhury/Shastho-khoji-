@@ -3,7 +3,7 @@ import SearchBar from "../components/SearchBar";
 
 const specializations = ["মেডিসিন", "শিশু রোগ", "গাইনি", "অর্থোপেডিক", "চর্মরোগ", "চক্ষু", "দন্ত রোগ", "মানসিক রোগ"];
 
-export default function Home() {
+function Home() {
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="bg-green-700 text-white py-16 px-4 text-center">
@@ -21,7 +21,7 @@ export default function Home() {
                         <Link
                             key={s}
                             to={`/search?specialization=${s}`}
-                            className="card text-center hover:shadow-md transition-shadow cursor-pointer hover:border-green-200"
+                            className="bg-white p-4 border rounded-xl text-center hover:shadow-md transition-all cursor-pointer"
                         >
                             <p className="text-2xl mb-1">🩺</p>
                             <p className="text-sm font-medium text-gray-700">{s}</p>
@@ -32,3 +32,6 @@ export default function Home() {
         </div>
     );
 }
+
+// একদম নিচে এক্সপোর্টটি দিয়ে দিলাম
+export default Home;

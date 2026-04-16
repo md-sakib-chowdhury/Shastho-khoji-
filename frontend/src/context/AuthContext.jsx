@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
         const stored = localStorage.getItem('user');
         return stored ? JSON.parse(stored) : null;
     });
+    // loading কে সরাসরি false করে দিন যেহেতু আপনি কোনো API কল করছেন না
     const [loading] = useState(false);
 
     const login = (userData) => {
