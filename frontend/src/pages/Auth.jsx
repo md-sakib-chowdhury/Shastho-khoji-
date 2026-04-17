@@ -16,8 +16,10 @@ export function Login() {
         setLoading(true);
         try {
             const res = await loginApi(form);
-            login(res.data);
-            navigate('/');
+            if (res.data) {
+                login(res.data);
+                navigate('/');
+            }
         } catch (err) {
             setError(err.response?.data?.message || 'Login হয়নি, আবার চেষ্টা করুন');
         } finally {
@@ -27,7 +29,7 @@ export function Login() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-            <div className="card w-full max-w-sm">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 w-full max-w-sm">
                 <div className="text-center mb-6">
                     <span className="text-4xl">🏥</span>
                     <h1 className="text-xl font-bold mt-2">স্বাস্থ্য খোঁজি</h1>
@@ -45,7 +47,7 @@ export function Login() {
                             value={form.phone}
                             onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
                             placeholder="01XXXXXXXXX"
-                            className="input-field"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             required
                         />
                     </div>
@@ -56,11 +58,15 @@ export function Login() {
                             value={form.password}
                             onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
                             placeholder="পাসওয়ার্ড দিন"
-                            className="input-field"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             required
                         />
                     </div>
-                    <button type="submit" disabled={loading} className="btn-primary w-full">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 font-medium transition-colors disabled:bg-gray-400"
+                    >
                         {loading ? 'প্রবেশ হচ্ছে...' : 'Login করুন'}
                     </button>
                 </form>
@@ -86,10 +92,12 @@ export function Register() {
         setLoading(true);
         try {
             const res = await registerApi(form);
-            login(res.data);
-            navigate('/');
+            if (res.data) {
+                login(res.data);
+                navigate('/');
+            }
         } catch (err) {
-            setError(err.response?.data?.message || 'নিবন্ধন হয়নি');
+            setError(err.response?.data?.message || 'নিবন্ধন সম্পন্ন হয়নি। আবার চেষ্টা করুন।');
         } finally {
             setLoading(false);
         }
@@ -97,7 +105,7 @@ export function Register() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-            <div className="card w-full max-w-sm">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 w-full max-w-sm">
                 <div className="text-center mb-6">
                     <span className="text-4xl">🏥</span>
                     <h1 className="text-xl font-bold mt-2">নতুন অ্যাকাউন্ট</h1>
@@ -115,7 +123,7 @@ export function Register() {
                             value={form.name}
                             onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                             placeholder="আপনার নাম"
-                            className="input-field"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             required
                         />
                     </div>
@@ -125,7 +133,7 @@ export function Register() {
                             value={form.phone}
                             onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
                             placeholder="01XXXXXXXXX"
-                            className="input-field"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             required
                         />
                     </div>
@@ -136,7 +144,7 @@ export function Register() {
                             value={form.email}
                             onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
                             placeholder="email@example.com"
-                            className="input-field"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                         />
                     </div>
                     <div>
@@ -146,12 +154,16 @@ export function Register() {
                             value={form.password}
                             onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
                             placeholder="কমপক্ষে ৬ অক্ষর"
-                            className="input-field"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                             minLength={6}
                             required
                         />
                     </div>
-                    <button type="submit" disabled={loading} className="btn-primary w-full">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 font-medium transition-colors disabled:bg-gray-400"
+                    >
                         {loading ? 'নিবন্ধন হচ্ছে...' : 'নিবন্ধন করুন'}
                     </button>
                 </form>

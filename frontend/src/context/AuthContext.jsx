@@ -1,22 +1,25 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState } from "react";
 
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => {
-        const stored = localStorage.getItem('user');
-        return stored ? JSON.parse(stored) : null;
+        try {
+            const stored = localStorage.getItem("shastho_user");
+            return stored ? JSON.parse(stored) : null;
+        } catch {
+            return null;
+        }
     });
-    // loading কে সরাসরি false করে দিন যেহেতু আপনি কোনো API কল করছেন না
     const [loading] = useState(false);
 
     const login = (userData) => {
-        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem("shastho_user", JSON.stringify(userData));
         setUser(userData);
     };
 
     const logout = () => {
-        localStorage.removeItem('user');
+        localStorage.removeItem("shastho_user");
         setUser(null);
     };
 
