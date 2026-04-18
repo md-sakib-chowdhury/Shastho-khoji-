@@ -31,6 +31,7 @@ import appointmentRoutes from "./src/routes/appointmentRoutes.js";
 import adminRoutes from "./src/routes/adminRoutes.js";
 import bannerRoutes from "./src/routes/bannerRoutes.js";
 import blogRoutes from "./src/routes/blogRoutes.js";
+import aboutRoutes from "./src/routes/aboutRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -45,6 +46,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/blogs", blogRoutes);
+app.use("/api/about", aboutRoutes);
 
 app.get("/", (req, res) => res.json({ message: "Shastho Khoji API চালু আছে ✅" }));
 
