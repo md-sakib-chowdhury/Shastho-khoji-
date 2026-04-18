@@ -18,7 +18,11 @@ export function Login() {
             const res = await loginApi(form);
             if (res.data) {
                 login(res.data);
-                navigate('/');
+                if (res.data.role === 'admin') {
+                    navigate('/admin');
+                } else {
+                    navigate('/');
+                }
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login হয়নি, আবার চেষ্টা করুন');
@@ -97,7 +101,7 @@ export function Register() {
                 navigate('/');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'নিবন্ধন সম্পন্ন হয়নি। আবার চেষ্টা করুন।');
+            setError(err.response?.data?.message || 'নিবন্ধন সম্পন্ন হয়নি। আবার চেষ্টা করুন।');
         } finally {
             setLoading(false);
         }
@@ -173,5 +177,24 @@ export function Register() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export function LogoutButton() {
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
+
+    return (
+        <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 font-medium transition-colors"
+        >
+            Logout
+        </button>
     );
 }

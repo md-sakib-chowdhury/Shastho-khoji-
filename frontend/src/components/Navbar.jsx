@@ -1,62 +1,17 @@
-// import { Link, useNavigate } from "react-router-dom";
-// import { useAuth } from "../hooks/useAuth";
-
-// function Navbar() { // এখানে export default সরিয়ে দিয়েছি
-//     const auth = useAuth();
-//     const navigate = useNavigate();
-
-//     if (!auth) return null;
-
-//     const { user, logout } = auth;
-
-//     const handleLogout = () => {
-//         logout();
-//         navigate("/");
-//     };
-
-//     return (
-//         <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
-//             <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-//                 <Link to="/" className="flex items-center gap-2">
-//                     <span className="text-2xl">🏥</span>
-//                     <span className="font-bold text-green-700 text-lg">স্বাস্থ্য খোঁজি</span>
-//                 </Link>
-//                 <div className="flex items-center gap-4">
-//                     <Link to="/search" className="text-gray-600 hover:text-green-600 text-sm font-medium">
-//                         ডাক্তার খুঁজুন
-//                     </Link>
-//                     {user ? (
-//                         <>
-//                             <Link to="/appointments" className="text-gray-600 hover:text-green-600 text-sm font-medium">
-//                                 অ্যাপয়েন্টমেন্ট
-//                             </Link>
-//                             <button
-//                                 onClick={handleLogout}
-//                                 className="text-sm text-red-500 hover:text-red-600 font-medium"
-//                             >
-//                                 Logout
-//                             </button>
-//                         </>
-//                     ) : (
-//                         <Link
-//                             to="/login"
-//                             className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700"
-//                         >
-//                             Login
-//                         </Link>
-//                     )}
-//                 </div>
-//             </div>
-//         </nav>
-//     );
-// }
-
-// export default Navbar; // শুধু এই এক জায়গায় এক্সপোর্ট থাকবে
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "../hooks/useAuth";
 
 function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false);
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate("/login");
+        setMenuOpen(false);
+    };
 
     return (
         <>
@@ -124,6 +79,8 @@ function Navbar() {
                     align-items: center;
                     gap: 2px;
                     list-style: none;
+                    margin: 0;
+                    padding: 0;
                 }
 
                 .nav-links-row a {
@@ -161,6 +118,43 @@ function Navbar() {
                     box-shadow: 0 6px 20px rgba(46,158,86,0.55) !important;
                 }
 
+                .nav-logout-btn {
+                    background: none;
+                    border: 1.5px solid rgba(255, 100, 100, 0.5);
+                    color: #ff8080;
+                    font-size: 14px;
+                    font-weight: 500;
+                    padding: 7px 16px;
+                    border-radius: 50px;
+                    cursor: pointer;
+                    font-family: 'Hind Siliguri', sans-serif;
+                    transition: all 0.2s;
+                }
+
+                .nav-logout-btn:hover {
+                    background: rgba(255,100,100,0.12);
+                    color: #ffaaaa;
+                }
+
+                .nav-user-name {
+                    color: rgba(255,255,255,0.6);
+                    font-size: 13px;
+                    padding: 0 8px;
+                }
+
+                .nav-admin-link {
+                    color: #f9c74f !important;
+                    background: rgba(249,199,79,0.1) !important;
+                    border-radius: 8px;
+                    padding: 8px 14px !important;
+                    font-size: 13px !important;
+                    font-weight: 600 !important;
+                }
+
+                .nav-admin-link:hover {
+                    background: rgba(249,199,79,0.2) !important;
+                }
+
                 .nav-hamburger {
                     display: none;
                     background: none;
@@ -178,7 +172,6 @@ function Navbar() {
 
                 .nav-hamburger:hover { background: rgba(255,255,255,0.08); }
 
-                /* Mobile drawer */
                 .nav-mobile-drawer {
                     background: #0d3b1e;
                     border-top: 1px solid rgba(255,255,255,0.06);
@@ -199,7 +192,8 @@ function Navbar() {
                 }
 
                 .nav-mobile-drawer a:hover { background: rgba(255,255,255,0.07); color: #fff; }
-                .nav-mobile-drawer .mob-cta {
+
+                .mob-cta {
                     margin-top: 8px;
                     background: linear-gradient(135deg, #2e9e56, #5ecb87);
                     color: #fff !important;
@@ -207,6 +201,24 @@ function Navbar() {
                     border-radius: 50px;
                     font-weight: 700;
                 }
+
+                .mob-logout {
+                    margin-top: 4px;
+                    border: 1.5px solid rgba(255,100,100,0.4);
+                    color: #ff8080 !important;
+                    text-align: center;
+                    border-radius: 50px;
+                    cursor: pointer;
+                    background: none;
+                    font-size: 15px;
+                    font-weight: 500;
+                    padding: 11px 14px;
+                    font-family: 'Hind Siliguri', sans-serif;
+                    width: 100%;
+                    transition: all 0.2s;
+                }
+
+                .mob-logout:hover { background: rgba(255,100,100,0.1); }
 
                 @media (max-width: 720px) {
                     .nav-links-row { display: none; }
@@ -229,11 +241,38 @@ function Navbar() {
                         <li><NavLink to="/hospitals">হাসপাতাল</NavLink></li>
                         <li><NavLink to="/tips">স্বাস্থ্য টিপস</NavLink></li>
                         <li><NavLink to="/about">আমাদের সম্পর্কে</NavLink></li>
-                        <li>
-                            <NavLink to="/appointment" className="nav-cta-btn">
-                                অ্যাপয়েন্টমেন্ট
-                            </NavLink>
-                        </li>
+
+                        {user ? (
+                            <>
+                                {user.role === 'admin' ? (
+                                    <li>
+                                        <NavLink to="/admin" className="nav-admin-link">
+                                            ⚙️ Admin Panel
+                                        </NavLink>
+                                    </li>
+                                ) : (
+                                    <li>
+                                        <NavLink to="/appointments" className="nav-cta-btn">
+                                            অ্যাপয়েন্টমেন্ট
+                                        </NavLink>
+                                    </li>
+                                )}
+                                <li>
+                                    <span className="nav-user-name">👤 {user.name}</span>
+                                </li>
+                                <li>
+                                    <button className="nav-logout-btn" onClick={handleLogout}>
+                                        Logout
+                                    </button>
+                                </li>
+                            </>
+                        ) : (
+                            <li>
+                                <NavLink to="/login" className="nav-cta-btn">
+                                    Login
+                                </NavLink>
+                            </li>
+                        )}
                     </ul>
 
                     <button
@@ -252,9 +291,28 @@ function Navbar() {
                         <NavLink to="/hospitals" onClick={() => setMenuOpen(false)}>হাসপাতাল</NavLink>
                         <NavLink to="/tips" onClick={() => setMenuOpen(false)}>স্বাস্থ্য টিপস</NavLink>
                         <NavLink to="/about" onClick={() => setMenuOpen(false)}>আমাদের সম্পর্কে</NavLink>
-                        <NavLink to="/appointment" className="mob-cta" onClick={() => setMenuOpen(false)}>
-                            📅 অ্যাপয়েন্টমেন্ট নিন
-                        </NavLink>
+
+                        {user ? (
+                            <>
+                                {user.role === 'admin' ? (
+                                    <NavLink to="/admin" onClick={() => setMenuOpen(false)}
+                                        style={{ color: '#f9c74f' }}>
+                                        ⚙️ Admin Panel
+                                    </NavLink>
+                                ) : (
+                                    <NavLink to="/appointments" className="mob-cta" onClick={() => setMenuOpen(false)}>
+                                        📅 অ্যাপয়েন্টমেন্ট নিন
+                                    </NavLink>
+                                )}
+                                <button className="mob-logout" onClick={handleLogout}>
+                                    Logout ({user.name})
+                                </button>
+                            </>
+                        ) : (
+                            <NavLink to="/login" className="mob-cta" onClick={() => setMenuOpen(false)}>
+                                🔐 Login করুন
+                            </NavLink>
+                        )}
                     </div>
                 )}
             </nav>
