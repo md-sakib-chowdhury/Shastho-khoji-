@@ -10,6 +10,8 @@ const menuItems = [
     { path: "/admin/banners", icon: "🖼️", label: "ব্যানার" },
     { path: "/admin/blogs", icon: "📝", label: "ব্লগ" },
     { path: "/admin/about", icon: "ℹ️", label: "আমাদের সম্পর্কে" },
+    { path: "/admin/hospitals", icon: "🏥", label: "হাসপাতাল" },
+    { path: "/admin/tips", icon: "💡", label: "স্বাস্থ্য টিপস" },
 ];
 
 export default function AdminLayout({ children }) {
