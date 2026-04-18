@@ -9,6 +9,7 @@ const menuItems = [
     { path: "/admin/users", icon: "👥", label: "ব্যবহারকারী" },
     { path: "/admin/banners", icon: "🖼️", label: "ব্যানার" },
     { path: "/admin/blogs", icon: "📝", label: "ব্লগ" },
+    { path: "/admin/about", icon: "ℹ️", label: "আমাদের সম্পর্কে" },
 ];
 
 export default function AdminLayout({ children }) {
@@ -35,14 +36,14 @@ export default function AdminLayout({ children }) {
                     </div>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1">
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                     {menuItems.map((item) => (
                         <Link
                             key={item.path}
                             to={item.path}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${location.pathname === item.path
-                                    ? "bg-green-600 text-white"
-                                    : "text-green-100 hover:bg-green-700"
+                                ? "bg-green-600 text-white"
+                                : "text-green-100 hover:bg-green-700"
                                 }`}
                         >
                             <span className="text-lg">{item.icon}</span>
@@ -52,7 +53,10 @@ export default function AdminLayout({ children }) {
                 </nav>
 
                 <div className="p-4 border-t border-green-700">
-                    <Link to="/" className="flex items-center gap-3 px-4 py-3 rounded-lg text-green-100 hover:bg-green-700 text-sm mb-2">
+                    <Link
+                        to="/"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-green-100 hover:bg-green-700 text-sm mb-2"
+                    >
                         🌐 Website দেখুন
                     </Link>
                     <button
