@@ -18,7 +18,7 @@ import ManageAppointments from "./pages/admin/ManageAppointments";
 import ManageUsers from "./pages/admin/ManageUsers";
 import ManageBanners from "./pages/admin/ManageBanners";
 import ManageBlogs from "./pages/admin/ManageBlogs";
-
+import ManageAbout from "./pages/admin/ManageAbout";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }) {
@@ -54,7 +54,7 @@ function AppRoutes() {
       <Route path="/admin/users" element={<AdminRoute><ManageUsers /></AdminRoute>} />
       <Route path="/admin/banners" element={<AdminRoute><ManageBanners /></AdminRoute>} />
       <Route path="/admin/blogs" element={<AdminRoute><ManageBlogs /></AdminRoute>} />
-
+      <Route path="/admin/about" element={<AdminRoute><ManageAbout /></AdminRoute>} />
       {/* 404 */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
