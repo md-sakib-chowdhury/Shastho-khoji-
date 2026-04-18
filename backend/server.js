@@ -32,6 +32,8 @@ import adminRoutes from "./src/routes/adminRoutes.js";
 import bannerRoutes from "./src/routes/bannerRoutes.js";
 import blogRoutes from "./src/routes/blogRoutes.js";
 import aboutRoutes from "./src/routes/aboutRoutes.js";
+import hospitalRoutes from "./src/routes/hospitalRoutes.js";
+import tipRoutes from "./src/routes/tipRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -47,7 +49,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/about", aboutRoutes);
-
+app.use("/api/hospitals", hospitalRoutes);
+app.use("/api/tips", tipRoutes);
 app.get("/", (req, res) => res.json({ message: "Shastho Khoji API চালু আছে ✅" }));
 
 const PORT = process.env.PORT || 5000;
