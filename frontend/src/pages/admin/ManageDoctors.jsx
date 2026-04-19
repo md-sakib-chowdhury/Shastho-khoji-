@@ -6,7 +6,7 @@ import AdminLayout from "./AdminLayout";
 const emptyForm = {
     name: "", specialization: "", phone: "", qualifications: "",
     experience: 0, consultationFee: 0, division: "", district: "",
-    upazila: "", address: "", availableDays: [], timeSlots: [],
+    upazila: "", address: "", imageUrl: "", availableDays: [], timeSlots: [],
 };
 
 const divisions = ["ঢাকা", "চট্টগ্রাম", "রাজশাহী", "খুলনা", "বরিশাল", "সিলেট", "রংপুর", "ময়মনসিংহ"];
@@ -81,24 +81,50 @@ export default function ManageDoctors() {
                 </button>
             </div>
 
-            {/* Form Modal */}
             {showForm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
                         <h2 className="text-lg font-bold mb-4">{editDoctor ? "ডাক্তার সম্পাদনা" : "নতুন ডাক্তার যোগ"}</h2>
+
                         <div className="grid grid-cols-2 gap-4">
                             {[["name", "নাম"], ["specialization", "বিশেষজ্ঞতা"], ["phone", "ফোন"], ["qualifications", "যোগ্যতা"]].map(([key, label]) => (
                                 <div key={key}>
                                     <label className="text-sm text-gray-600 block mb-1">{label}</label>
-                                    <input value={form[key]} onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" />
+                                    <input value={form[key] || ""} onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" />
                                 </div>
                             ))}
+
+                            {/* Image URL - full width */}
+                            <div className="col-span-2">
+                                <label className="text-sm text-gray-600 block mb-1">ডাক্তারের ছবির URL</label>
+                                <input
+                                    value={form.imageUrl || ""}
+                                    onChange={(e) => setForm((p) => ({ ...p, imageUrl: e.target.value }))}
+                                    placeholder="https://example.com/doctor-photo.jpg"
+                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                            </div>
+
+                            {/* Image Preview */}
+                            {form.imageUrl && (
+                                <div className="col-span-2 flex items-center gap-4">
+                                    <img
+                                        src={form.imageUrl}
+                                        alt="preview"
+                                        className="w-20 h-20 rounded-full object-cover border-2 border-green-200"
+                                        onError={(e) => e.target.style.display = "none"}
+                                    />
+                                    <p className="text-sm text-green-600">✅ ছবি preview</p>
+                                </div>
+                            )}
+
                             {[["experience", "অভিজ্ঞতা (বছর)"], ["consultationFee", "পরামর্শ ফি (৳)"]].map(([key, label]) => (
                                 <div key={key}>
                                     <label className="text-sm text-gray-600 block mb-1">{label}</label>
                                     <input type="number" value={form[key]} onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" />
                                 </div>
                             ))}
+
                             <div>
                                 <label className="text-sm text-gray-600 block mb-1">বিভাগ</label>
                                 <select value={form.division} onChange={(e) => setForm((p) => ({ ...p, division: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
@@ -106,14 +132,16 @@ export default function ManageDoctors() {
                                     {divisions.map((d) => <option key={d}>{d}</option>)}
                                 </select>
                             </div>
+
                             {[["district", "জেলা"], ["upazila", "উপজেলা"], ["address", "ঠিকানা"]].map(([key, label]) => (
                                 <div key={key}>
                                     <label className="text-sm text-gray-600 block mb-1">{label}</label>
-                                    <input value={form[key]} onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" />
+                                    <input value={form[key] || ""} onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" />
                                 </div>
                             ))}
                         </div>
 
+                        {/* Available Days */}
                         <div className="mt-4">
                             <label className="text-sm text-gray-600 block mb-2">উপলব্ধ দিন</label>
                             <div className="flex flex-wrap gap-2">
@@ -125,6 +153,7 @@ export default function ManageDoctors() {
                             </div>
                         </div>
 
+                        {/* Time Slots */}
                         <div className="mt-4">
                             <label className="text-sm text-gray-600 block mb-2">সময় স্লট</label>
                             <div className="flex gap-2 mb-2">
@@ -153,7 +182,7 @@ export default function ManageDoctors() {
                 </div>
             )}
 
-            {/* Doctor List */}
+            {/* Doctor List Table */}
             {isLoading ? (
                 <div className="text-center py-10 text-gray-400">লোড হচ্ছে...</div>
             ) : (
@@ -161,7 +190,7 @@ export default function ManageDoctors() {
                     <table className="w-full">
                         <thead className="bg-gray-50 border-b">
                             <tr>
-                                {["নাম", "বিশেষজ্ঞতা", "জেলা", "ফি", "Action"].map((h) => (
+                                {["ছবি", "নাম", "বিশেষজ্ঞতা", "জেলা", "ফি", "Action"].map((h) => (
                                     <th key={h} className="text-left px-6 py-3 text-sm font-medium text-gray-600">{h}</th>
                                 ))}
                             </tr>
@@ -169,6 +198,15 @@ export default function ManageDoctors() {
                         <tbody className="divide-y divide-gray-100">
                             {data?.doctors?.map((doc) => (
                                 <tr key={doc._id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4">
+                                        <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200">
+                                            {doc.imageUrl ? (
+                                                <img src={doc.imageUrl} alt={doc.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; }} />
+                                            ) : (
+                                                <div className="w-full h-full bg-green-100 flex items-center justify-center text-lg">👨‍⚕️</div>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className="px-6 py-4 font-medium text-gray-800">ডা. {doc.name}</td>
                                     <td className="px-6 py-4 text-green-600 text-sm">{doc.specialization}</td>
                                     <td className="px-6 py-4 text-gray-500 text-sm">{doc.district}</td>
