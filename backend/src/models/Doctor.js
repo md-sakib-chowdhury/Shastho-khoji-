@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const doctorSchema = new mongoose.Schema({
     name: { type: String, required: true },
+    imageUrl: { type: String, default: "" },
     specialization: { type: String, required: true },
     phone: { type: String },
     qualifications: { type: String },
