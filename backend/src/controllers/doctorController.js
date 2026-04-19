@@ -39,3 +39,22 @@ export const createDoctor = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+export const updateDoctor = async (req, res) => {
+    try {
+        const doctor = await Doctor.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!doctor) return res.status(404).json({ message: "ডাক্তার পাওয়া যায়নি" });
+        res.json(doctor);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+export const deleteDoctor = async (req, res) => {
+    try {
+        await Doctor.findByIdAndDelete(req.params.id);
+        res.json({ message: "ডাক্তার মুছে ফেলা হয়েছে" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
