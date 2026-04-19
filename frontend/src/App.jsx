@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./context/AuthContext";
 import { useAuth } from "./hooks/useAuth";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer"; // ✅ import
 import Home from "./pages/Home";
 import Search from "./pages/Search";
 import DoctorProfile from "./pages/DoctorProfile";
@@ -24,6 +25,17 @@ import ManageTips from "./pages/admin/ManageTips";
 
 const queryClient = new QueryClient();
 
+// ✅ Public Layout — Navbar + Footer সহ
+function PublicLayout({ children }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <Navbar />
+      <main style={{ flex: 1 }}>{children}</main>
+      <Footer />
+    </div>
+  );
+}
+
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center"><p className="text-gray-400">লোড হচ্ছে...</p></div>;
@@ -39,18 +51,26 @@ function AdminRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<><Navbar /><Home /></>} />
-      <Route path="/search" element={<><Navbar /><Search /></>} />
-      <Route path="/doctor/:id" element={<><Navbar /><DoctorProfile /></>} />
+      {/* ✅ Public Routes — Footer আছে */}
+      <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+      <Route path="/search" element={<PublicLayout><Search /></PublicLayout>} />
+      <Route path="/doctor/:id" element={<PublicLayout><DoctorProfile /></PublicLayout>} />
+      <Route path="/hospitals" element={<PublicLayout><Hospitals /></PublicLayout>} />
+      <Route path="/tips" element={<PublicLayout><Tips /></PublicLayout>} />
+      <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
+
+      {/* ✅ Protected Route — Footer আছে */}
+      <Route path="/appointments" element={
+        <ProtectedRoute>
+          <PublicLayout><Appointments /></PublicLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* ⛔ Auth Routes — Footer নেই */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/hospitals" element={<><Navbar /><Hospitals /></>} />
-      <Route path="/tips" element={<><Navbar /><Tips /></>} />
-      <Route path="/about" element={<><Navbar /><About /></>} />
-      <Route path="/appointments" element={<ProtectedRoute><><Navbar /><Appointments /></></ProtectedRoute>} />
 
-      {/* Admin Routes */}
+      {/* ⛔ Admin Routes — Footer নেই */}
       <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
       <Route path="/admin/doctors" element={<AdminRoute><ManageDoctors /></AdminRoute>} />
       <Route path="/admin/appointments" element={<AdminRoute><ManageAppointments /></AdminRoute>} />
@@ -60,6 +80,7 @@ function AppRoutes() {
       <Route path="/admin/about" element={<AdminRoute><ManageAbout /></AdminRoute>} />
       <Route path="/admin/hospitals" element={<AdminRoute><ManageHospitals /></AdminRoute>} />
       <Route path="/admin/tips" element={<AdminRoute><ManageTips /></AdminRoute>} />
+
       {/* 404 */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
