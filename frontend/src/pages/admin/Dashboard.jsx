@@ -12,14 +12,6 @@ export default function Dashboard() {
         queryFn: () => axios.get("/admin/stats").then((r) => r.data),
     });
 
-    if (isLoading) return (
-        <AdminLayout>
-            <div className="flex items-center justify-center h-64">
-                <p className="text-gray-400 text-lg">লোড হচ্ছে...</p>
-            </div>
-        </AdminLayout>
-    );
-
     const statCards = [
         { label: "মোট ব্যবহারকারী", value: stats?.totalUsers || 0, icon: "👥", color: "bg-blue-500" },
         { label: "মোট ডাক্তার", value: stats?.totalDoctors || 0, icon: "👨‍⚕️", color: "bg-green-500" },
@@ -38,6 +30,14 @@ export default function Dashboard() {
         { name: "ডাক্তার", value: stats?.totalDoctors || 0 },
     ];
 
+    if (isLoading) return (
+        <AdminLayout>
+            <div className="flex items-center justify-center h-64">
+                <p className="text-gray-400 text-lg">লোড হচ্ছে...</p>
+            </div>
+        </AdminLayout>
+    );
+
     return (
         <AdminLayout>
             <div className="mb-8">
@@ -45,11 +45,10 @@ export default function Dashboard() {
                 <p className="text-gray-500 mt-1">স্বাস্থ্য খোঁজি — সামগ্রিক পরিসংখ্যান</p>
             </div>
 
-            {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {statCards.map((card) => (
                     <div key={card.label} className="bg-white rounded-xl shadow-sm p-6 flex items-center gap-4">
-                        <div className={`${card.color} w-12 h-12 rounded-full flex items-center justify-center text-2xl`}>
+                        <div className={`${card.color} w-12 h-12 rounded-full flex items-center justify-center text-2xl text-white`}>
                             {card.icon}
                         </div>
                         <div>
@@ -60,7 +59,6 @@ export default function Dashboard() {
                 ))}
             </div>
 
-            {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white rounded-xl shadow-sm p-6">
                     <h2 className="font-semibold text-gray-800 mb-4">অ্যাপয়েন্টমেন্ট অবস্থা</h2>
