@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./context/AuthContext";
 import { useAuth } from "./hooks/useAuth";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Search from "./pages/Search";
 import DoctorProfile from "./pages/DoctorProfile";
@@ -33,15 +34,25 @@ function AdminRoute({ children }) {
   return children;
 }
 
+function PublicLayout({ children }) {
+  return (
+    <>
+      <Navbar />
+      {children}
+      <Footer />
+    </>
+  );
+}
+
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<><Navbar /><Home /></>} />
-      <Route path="/search" element={<><Navbar /><Search /></>} />
-      <Route path="/doctor/:id" element={<><Navbar /><DoctorProfile /></>} />
+      <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+      <Route path="/search" element={<PublicLayout><Search /></PublicLayout>} />
+      <Route path="/doctor/:id" element={<PublicLayout><DoctorProfile /></PublicLayout>} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/appointments" element={<ProtectedRoute><><Navbar /><Appointments /></></ProtectedRoute>} />
+      <Route path="/appointments" element={<ProtectedRoute><PublicLayout><Appointments /></PublicLayout></ProtectedRoute>} />
       <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
       <Route path="/admin/doctors" element={<AdminRoute><ManageDoctors /></AdminRoute>} />
       <Route path="/admin/appointments" element={<AdminRoute><ManageAppointments /></AdminRoute>} />

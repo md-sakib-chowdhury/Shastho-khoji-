@@ -1,3 +1,392 @@
+// import { Link } from "react-router-dom";
+// import { useEffect, useRef } from "react";
+// import SearchBar from "../components/SearchBar";
+
+// const specializations = [
+//     { name: "মেডিসিন", icon: "💊", bg: "linear-gradient(135deg, #e8f5e9, #c8e6c9)", accent: "#2e7d32", count: "১২০+" },
+//     { name: "শিশু রোগ", icon: "👶", bg: "linear-gradient(135deg, #e3f2fd, #bbdefb)", accent: "#1565c0", count: "৮৫+" },
+//     { name: "গাইনি", icon: "🌸", bg: "linear-gradient(135deg, #fce4ec, #f8bbd0)", accent: "#ad1457", count: "৭৪+" },
+//     { name: "অর্থোপেডিক", icon: "🦴", bg: "linear-gradient(135deg, #fff8e1, #ffe082)", accent: "#f57f17", count: "৫২+" },
+//     { name: "চর্মরোগ", icon: "🧴", bg: "linear-gradient(135deg, #f3e5f5, #e1bee7)", accent: "#6a1b9a", count: "৪৮+" },
+//     { name: "চক্ষু", icon: "👁️", bg: "linear-gradient(135deg, #e0f7fa, #b2ebf2)", accent: "#00695c", count: "৩৯+" },
+//     { name: "দন্ত রোগ", icon: "🦷", bg: "linear-gradient(135deg, #e8eaf6, #c5cae9)", accent: "#283593", count: "৬১+" },
+//     { name: "মানসিক রোগ", icon: "🧠", bg: "linear-gradient(135deg, #e8f5e9, #a5d6a7)", accent: "#1b5e20", count: "৩৩+" },
+// ];
+
+// const stats = [
+//     { value: "৫০০+", label: "বিশেষজ্ঞ ডাক্তার" },
+//     { value: "৬৪", label: "জেলায় সেবা" },
+//     { value: "১০ লাখ+", label: "রোগী সেবা পেয়েছেন" },
+// ];
+
+// const features = [
+//     { icon: "⚡", title: "তাৎক্ষণিক বুকিং", desc: "মাত্র ৩০ সেকেন্ডে অ্যাপয়েন্টমেন্ট নিন, কোনো অপেক্ষা নেই" },
+//     { icon: "✅", title: "যাচাইকৃত ডাক্তার", desc: "সকল ডাক্তার BMDC রেজিস্ট্রেশন যাচাইকৃত" },
+//     { icon: "💬", title: "অনলাইন পরামর্শ", desc: "ঘরে বসেই ভিডিও কলে ডাক্তারের সাথে কথা বলুন" },
+// ];
+
+// // ── Animated Specialization Grid ──
+// function SpecializationGrid() {
+//     const gridRef = useRef(null);
+
+//     useEffect(() => {
+//         const cards = gridRef.current?.querySelectorAll(".spec-card");
+//         if (!cards) return;
+
+//         // First 4 cards come from LEFT, last 4 from RIGHT
+//         cards.forEach((card, i) => {
+//             const fromLeft = i < 4;
+//             card.style.opacity = "0";
+//             card.style.transform = `translateX(${fromLeft ? "-120px" : "120px"}) scale(0.92)`;
+//             card.style.transition = `transform 0.6s cubic-bezier(0.34,1.2,0.64,1), opacity 0.5s ease`;
+//         });
+
+//         const observer = new IntersectionObserver(
+//             (entries) => {
+//                 entries.forEach((entry) => {
+//                     if (entry.isIntersecting) {
+//                         cards.forEach((card, i) => {
+//                             const fromLeft = i < 4;
+//                             // Left cards: stagger 0,1,2,3 → delay 0,80,160,240ms
+//                             // Right cards: stagger 3,2,1,0 → delay 0,80,160,240ms
+//                             const staggerIndex = fromLeft ? i : (7 - i);
+//                             const delay = staggerIndex * 90;
+//                             setTimeout(() => {
+//                                 card.style.opacity = "1";
+//                                 card.style.transform = "translateX(0) scale(1)";
+//                             }, delay);
+//                         });
+//                         observer.unobserve(entry.target);
+//                     }
+//                 });
+//             },
+//             { threshold: 0.1 }
+//         );
+
+//         if (gridRef.current) observer.observe(gridRef.current);
+//         return () => observer.disconnect();
+//     }, []);
+
+//     return (
+//         <div
+//             ref={gridRef}
+//             style={{
+//                 display: "grid",
+//                 gridTemplateColumns: "repeat(4, 1fr)",
+//                 gap: 18,
+//             }}
+//         >
+//             {specializations.map((s, i) => (
+//                 <Link
+//                     key={s.name}
+//                     to={`/search?specialization=${s.name}`}
+//                     style={{ textDecoration: "none" }}
+//                 >
+//                     <div
+//                         className="spec-card"
+//                         style={{
+//                             background: "#fff",
+//                             borderRadius: 22,
+//                             padding: "32px 16px 24px",
+//                             textAlign: "center",
+//                             border: "1.5px solid #e0f0e8",
+//                             cursor: "pointer",
+//                             boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
+//                             position: "relative",
+//                             overflow: "hidden",
+//                             transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s",
+//                         }}
+//                         onMouseEnter={(e) => {
+//                             e.currentTarget.style.transform = "translateY(-8px) scale(1.04)";
+//                             e.currentTarget.style.boxShadow = `0 20px 50px rgba(26,107,56,0.18)`;
+//                             e.currentTarget.style.borderColor = s.accent;
+//                         }}
+//                         onMouseLeave={(e) => {
+//                             e.currentTarget.style.transform = "translateY(0) scale(1)";
+//                             e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.05)";
+//                             e.currentTarget.style.borderColor = "#e0f0e8";
+//                         }}
+//                     >
+//                         {/* Top accent bar */}
+//                         <div style={{
+//                             position: "absolute",
+//                             top: 0, left: 0, right: 0,
+//                             height: 4,
+//                             background: s.accent,
+//                             borderRadius: "22px 22px 0 0",
+//                             opacity: 0.7,
+//                         }} />
+
+//                         {/* Icon bubble */}
+//                         <div style={{
+//                             width: 68,
+//                             height: 68,
+//                             borderRadius: 20,
+//                             background: s.bg,
+//                             display: "flex",
+//                             alignItems: "center",
+//                             justifyContent: "center",
+//                             fontSize: 32,
+//                             margin: "0 auto 16px",
+//                             boxShadow: `0 6px 20px rgba(0,0,0,0.08)`,
+//                             position: "relative",
+//                         }}>
+//                             {s.icon}
+//                         </div>
+
+//                         <p style={{
+//                             fontSize: 14,
+//                             fontWeight: 700,
+//                             color: "#0d3b1e",
+//                             margin: "0 0 6px",
+//                         }}>
+//                             {s.name}
+//                         </p>
+
+//                         {/* Count badge */}
+//                         <div style={{
+//                             display: "inline-flex",
+//                             alignItems: "center",
+//                             gap: 4,
+//                             background: `${s.accent}15`,
+//                             border: `1px solid ${s.accent}30`,
+//                             borderRadius: 50,
+//                             padding: "3px 10px",
+//                             fontSize: 11,
+//                             fontWeight: 600,
+//                             color: s.accent,
+//                         }}>
+//                             {s.count} ডাক্তার
+//                         </div>
+//                     </div>
+//                 </Link>
+//             ))}
+//         </div>
+//     );
+// }
+
+// // ── Home ──
+// function Home() {
+//     return (
+//         <div style={{ fontFamily: "'Hind Siliguri', sans-serif", background: "#f7fbf9", minHeight: "100vh" }}>
+
+//             <link
+//                 href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@700;800;900&display=swap"
+//                 rel="stylesheet"
+//             />
+
+//             {/* ── HERO ── */}
+//             <section
+//                 style={{
+//                     position: "relative",
+//                     background: "linear-gradient(160deg, #062210 0%, #0d3b1e 40%, #1a6b38 80%, #2e9e56 100%)",
+//                     padding: "80px 24px 100px",
+//                     textAlign: "center",
+//                     overflow: "hidden",
+//                 }}
+//             >
+//                 <div style={{
+//                     position: "absolute", inset: 0,
+//                     backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
+//                     backgroundSize: "60px 60px",
+//                     pointerEvents: "none",
+//                 }} />
+//                 <div style={{
+//                     position: "absolute", width: 500, height: 500, borderRadius: "50%",
+//                     background: "radial-gradient(circle, rgba(94,203,135,0.12) 0%, transparent 70%)",
+//                     top: -150, right: -150, pointerEvents: "none",
+//                 }} />
+//                 <div style={{
+//                     position: "absolute", width: 350, height: 350, borderRadius: "50%",
+//                     background: "radial-gradient(circle, rgba(240,192,64,0.07) 0%, transparent 70%)",
+//                     bottom: -80, left: -80, pointerEvents: "none",
+//                 }} />
+
+//                 <div style={{ position: "relative", zIndex: 2, maxWidth: 720, margin: "0 auto" }}>
+//                     <div style={{
+//                         display: "inline-flex", alignItems: "center", gap: 8,
+//                         background: "rgba(255,255,255,0.1)",
+//                         border: "1px solid rgba(255,255,255,0.18)",
+//                         borderRadius: 50, padding: "7px 18px",
+//                         fontSize: 13, color: "#a8e6c0",
+//                         marginBottom: 28, backdropFilter: "blur(8px)",
+//                     }}>
+//                         <span style={{
+//                             width: 7, height: 7, borderRadius: "50%",
+//                             background: "#5ecb87", boxShadow: "0 0 8px #5ecb87",
+//                             display: "inline-block",
+//                         }} />
+//                         বাংলাদেশের নির্ভরযোগ্য স্বাস্থ্যসেবা প্ল্যাটফর্ম
+//                     </div>
+
+//                     <h1 style={{
+//                         fontFamily: "'Noto Serif Bengali', serif",
+//                         fontSize: "clamp(2.6rem, 6vw, 4.6rem)",
+//                         fontWeight: 900, color: "#fff",
+//                         lineHeight: 1.15, letterSpacing: "-1px",
+//                         marginBottom: 16,
+//                         textShadow: "0 2px 12px rgba(0,0,0,0.2)",
+//                     }}>
+//                         সঠিক ডাক্তার,{" "}
+//                         <span style={{
+//                             background: "linear-gradient(135deg, #5ecb87, #f0c040)",
+//                             WebkitBackgroundClip: "text",
+//                             WebkitTextFillColor: "transparent",
+//                         }}>
+//                             সঠিক সময়ে
+//                         </span>
+//                     </h1>
+
+//                     <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 17, marginBottom: 40, lineHeight: 1.7 }}>
+//                         বাংলাদেশের যেকোনো প্রান্তে বিশেষজ্ঞ ডাক্তার খুঁজুন —<br />
+//                         সহজে, দ্রুত এবং বিশ্বস্তভাবে
+//                     </p>
+
+//                     <div style={{ display: "flex", justifyContent: "center", marginBottom: 52 }}>
+//                         <SearchBar />
+//                     </div>
+
+//                     <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
+//                         {stats.map((s, i) => (
+//                             <div key={s.label} style={{
+//                                 padding: "0 32px", textAlign: "center",
+//                                 borderRight: i < stats.length - 1 ? "1px solid rgba(255,255,255,0.15)" : "none",
+//                             }}>
+//                                 <div style={{
+//                                     fontFamily: "'Noto Serif Bengali', serif",
+//                                     fontSize: 26, fontWeight: 900, color: "#fff", marginBottom: 4,
+//                                 }}>{s.value}</div>
+//                                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{s.label}</div>
+//                             </div>
+//                         ))}
+//                     </div>
+//                 </div>
+//             </section>
+
+//             {/* Wave */}
+//             <div style={{ marginTop: -2, lineHeight: 0, background: "#0d3b1e" }}>
+//                 <svg viewBox="0 0 1200 70" xmlns="http://www.w3.org/2000/svg"
+//                     preserveAspectRatio="none"
+//                     style={{ display: "block", width: "100%", height: 70 }}>
+//                     <path d="M0,35 C200,70 400,0 600,35 C800,70 1000,10 1200,35 L1200,70 L0,70 Z" fill="#f7fbf9" />
+//                 </svg>
+//             </div>
+
+//             {/* ── CONTENT ── */}
+//             <div style={{ maxWidth: 960, margin: "0 auto", padding: "56px 24px 80px" }}>
+
+//                 {/* Features */}
+//                 <div style={{
+//                     display: "grid",
+//                     gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+//                     gap: 18, marginBottom: 64,
+//                 }}>
+//                     {features.map((f) => (
+//                         <div key={f.title} style={{
+//                             background: "#fff", borderRadius: 20,
+//                             padding: "28px 22px", border: "1.5px solid #e4f0ea",
+//                             transition: "all 0.2s ease",
+//                         }}
+//                             onMouseEnter={e => {
+//                                 e.currentTarget.style.borderColor = "#5ecb87";
+//                                 e.currentTarget.style.boxShadow = "0 8px 30px rgba(46,158,86,0.1)";
+//                                 e.currentTarget.style.transform = "translateY(-3px)";
+//                             }}
+//                             onMouseLeave={e => {
+//                                 e.currentTarget.style.borderColor = "#e4f0ea";
+//                                 e.currentTarget.style.boxShadow = "none";
+//                                 e.currentTarget.style.transform = "translateY(0)";
+//                             }}
+//                         >
+//                             <div style={{
+//                                 width: 48, height: 48, borderRadius: 12,
+//                                 background: "#eef9f2",
+//                                 display: "flex", alignItems: "center", justifyContent: "center",
+//                                 fontSize: 22, marginBottom: 14,
+//                             }}>{f.icon}</div>
+//                             <div style={{ fontWeight: 700, fontSize: 15, color: "#0d3b1e", marginBottom: 6 }}>{f.title}</div>
+//                             <div style={{ fontSize: 13, color: "#5a7a66", lineHeight: 1.6 }}>{f.desc}</div>
+//                         </div>
+//                     ))}
+//                 </div>
+
+//                 {/* Section Header */}
+//                 <div style={{ textAlign: "center", marginBottom: 40 }}>
+//                     <span style={{
+//                         display: "inline-block",
+//                         background: "rgba(46,158,86,0.1)", color: "#2e9e56",
+//                         border: "1px solid rgba(46,158,86,0.25)",
+//                         borderRadius: 50, padding: "5px 16px",
+//                         fontSize: 12, fontWeight: 600,
+//                         letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12,
+//                     }}>বিভাগসমূহ</span>
+//                     <h2 style={{
+//                         fontFamily: "'Noto Serif Bengali', serif",
+//                         fontSize: 28, fontWeight: 800, color: "#0d3b1e", marginBottom: 8,
+//                     }}>বিশেষজ্ঞতা অনুযায়ী খুঁজুন</h2>
+//                     <p style={{ color: "#5a7a66", fontSize: 14 }}>আপনার প্রয়োজন অনুযায়ী বিভাগ বেছে নিন</p>
+//                     <div style={{
+//                         width: 48, height: 4,
+//                         background: "linear-gradient(90deg, #2e9e56, #5ecb87)",
+//                         borderRadius: 4, margin: "12px auto 0",
+//                     }} />
+//                 </div>
+
+//                 {/* ── Animated Specialization Grid ── */}
+//                 <SpecializationGrid />
+
+//                 {/* CTA Banner */}
+//                 <div style={{
+//                     marginTop: 56,
+//                     background: "linear-gradient(135deg, #0d3b1e 0%, #1a6b38 100%)",
+//                     borderRadius: 24, padding: "44px 40px",
+//                     display: "flex", alignItems: "center",
+//                     justifyContent: "space-between", flexWrap: "wrap", gap: 20,
+//                     boxShadow: "0 20px 60px rgba(13,59,30,0.3)",
+//                     position: "relative", overflow: "hidden",
+//                 }}>
+//                     <div style={{
+//                         position: "absolute", right: 160, top: "50%",
+//                         transform: "translateY(-50%)",
+//                         fontSize: 110, opacity: 0.06, pointerEvents: "none",
+//                     }}>🏥</div>
+//                     <div style={{ position: "relative" }}>
+//                         <h3 style={{
+//                             fontFamily: "'Noto Serif Bengali', serif",
+//                             color: "#fff", fontSize: 22, fontWeight: 800, marginBottom: 6,
+//                         }}>জরুরি সাহায্য দরকার?</h3>
+//                         <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
+//                             আমাদের হেল্পলাইনে যোগাযোগ করুন — ২৪ ঘণ্টা, ৭ দিন
+//                         </p>
+//                     </div>
+//                     <a href="tel:16000" style={{
+//                         background: "#fff", color: "#0d3b1e",
+//                         padding: "14px 32px", borderRadius: 50,
+//                         fontFamily: "'Hind Siliguri', sans-serif",
+//                         fontWeight: 700, fontSize: 16, textDecoration: "none",
+//                         flexShrink: 0, boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+//                         display: "inline-flex", alignItems: "center", gap: 8,
+//                         transition: "all 0.2s ease", position: "relative",
+//                     }}
+//                         onMouseEnter={e => {
+//                             e.currentTarget.style.transform = "translateY(-2px)";
+//                             e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.3)";
+//                         }}
+//                         onMouseLeave={e => {
+//                             e.currentTarget.style.transform = "translateY(0)";
+//                             e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)";
+//                         }}
+//                     >
+//                         📞 ১৬০০০ তে কল করুন
+//                     </a>
+//                 </div>
+//             </div>
+//         </div>
+//     );
+// }
+
+// export default Home;
+
 import { Link } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import SearchBar from "../components/SearchBar";
@@ -20,12 +409,105 @@ const stats = [
 ];
 
 const features = [
-    { icon: "⚡", title: "তাৎক্ষণিক বুকিং", desc: "মাত্র ৩০ সেকেন্ডে অ্যাপয়েন্টমেন্ট নিন, কোনো অপেক্ষা নেই" },
-    { icon: "✅", title: "যাচাইকৃত ডাক্তার", desc: "সকল ডাক্তার BMDC রেজিস্ট্রেশন যাচাইকৃত" },
-    { icon: "💬", title: "অনলাইন পরামর্শ", desc: "ঘরে বসেই ভিডিও কলে ডাক্তারের সাথে কথা বলুন" },
+    { icon: "⚡", title: "তাৎক্ষণিক বুকিং", desc: "মাত্র ৩০ সেকেন্ডে অ্যাপয়েন্টমেন্ট নিন, কোনো অপেক্ষা নেই", color: "#2e7d32", bg: "#eef9f2" },
+    { icon: "✅", title: "যাচাইকৃত ডাক্তার", desc: "সকল ডাক্তার BMDC রেজিস্ট্রেশন যাচাইকৃত", color: "#1565c0", bg: "#e3f2fd" },
+    { icon: "💬", title: "অনলাইন পরামর্শ", desc: "ঘরে বসেই ভিডিও কলে ডাক্তারের সাথে কথা বলুন", color: "#ad1457", bg: "#fce4ec" },
+    { icon: "🔒", title: "সম্পূর্ণ নিরাপদ", desc: "আপনার তথ্য সম্পূর্ণ সুরক্ষিত এবং গোপনীয়", color: "#f57f17", bg: "#fff8e1" },
+    { icon: "🌍", title: "সারাদেশে সেবা", desc: "বাংলাদেশের ৬৪ জেলায় আমাদের ডাক্তার নেটওয়ার্ক", color: "#6a1b9a", bg: "#f3e5f5" },
+    { icon: "⭐", title: "রেটিং ও রিভিউ", desc: "হাজারো রোগীর রিভিউ দেখে সেরা ডাক্তার বেছে নিন", color: "#00695c", bg: "#e0f7fa" },
 ];
 
-// ── Animated Specialization Grid ──
+function FeatureCards() {
+    const cardsRef = useRef([]);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = "1";
+                        entry.target.style.transform = "translateY(0) scale(1)";
+                    }
+                });
+            },
+            { threshold: 0.15 }
+        );
+
+        cardsRef.current.forEach((card) => {
+            if (card) observer.observe(card);
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: 20,
+            marginBottom: 72,
+        }}>
+            {features.map((f, i) => (
+                <div
+                    key={f.title}
+                    ref={(el) => (cardsRef.current[i] = el)}
+                    style={{
+                        background: "#fff",
+                        borderRadius: 22,
+                        padding: "32px 24px",
+                        border: `1.5px solid ${f.color}20`,
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+                        opacity: 0,
+                        transform: "translateY(40px) scale(0.96)",
+                        transition: `all 0.6s cubic-bezier(0.34,1.2,0.64,1) ${i * 80}ms`,
+                        cursor: "default",
+                        position: "relative",
+                        overflow: "hidden",
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-8px) scale(1.03)";
+                        e.currentTarget.style.boxShadow = `0 20px 50px ${f.color}25`;
+                        e.currentTarget.style.borderColor = f.color;
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0) scale(1)";
+                        e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.05)";
+                        e.currentTarget.style.borderColor = `${f.color}20`;
+                    }}
+                >
+                    {/* Top accent */}
+                    <div style={{
+                        position: "absolute", top: 0, left: 0, right: 0, height: 4,
+                        background: `linear-gradient(90deg, ${f.color}, ${f.color}80)`,
+                        borderRadius: "22px 22px 0 0",
+                    }} />
+
+                    {/* Icon */}
+                    <div style={{
+                        width: 60, height: 60, borderRadius: 16,
+                        background: f.bg,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 28, marginBottom: 18,
+                        boxShadow: `0 6px 20px ${f.color}20`,
+                    }}>
+                        {f.icon}
+                    </div>
+
+                    <div style={{ fontWeight: 700, fontSize: 16, color: "#0d3b1e", marginBottom: 8 }}>{f.title}</div>
+                    <div style={{ fontSize: 13, color: "#5a7a66", lineHeight: 1.7 }}>{f.desc}</div>
+
+                    {/* Bottom color dot */}
+                    <div style={{
+                        position: "absolute", bottom: 16, right: 16,
+                        width: 8, height: 8, borderRadius: "50%",
+                        background: f.color, opacity: 0.4,
+                    }} />
+                </div>
+            ))}
+        </div>
+    );
+}
+
 function SpecializationGrid() {
     const gridRef = useRef(null);
 
@@ -33,7 +515,6 @@ function SpecializationGrid() {
         const cards = gridRef.current?.querySelectorAll(".spec-card");
         if (!cards) return;
 
-        // First 4 cards come from LEFT, last 4 from RIGHT
         cards.forEach((card, i) => {
             const fromLeft = i < 4;
             card.style.opacity = "0";
@@ -47,9 +528,7 @@ function SpecializationGrid() {
                     if (entry.isIntersecting) {
                         cards.forEach((card, i) => {
                             const fromLeft = i < 4;
-                            // Left cards: stagger 0,1,2,3 → delay 0,80,160,240ms
-                            // Right cards: stagger 3,2,1,0 → delay 0,80,160,240ms
-                            const staggerIndex = fromLeft ? i : (7 - i);
+                            const staggerIndex = fromLeft ? i : 7 - i;
                             const delay = staggerIndex * 90;
                             setTimeout(() => {
                                 card.style.opacity = "1";
@@ -68,32 +547,21 @@ function SpecializationGrid() {
     }, []);
 
     return (
-        <div
-            ref={gridRef}
-            style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gap: 18,
-            }}
-        >
-            {specializations.map((s, i) => (
-                <Link
-                    key={s.name}
-                    to={`/search?specialization=${s.name}`}
-                    style={{ textDecoration: "none" }}
-                >
+        <div ref={gridRef} style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 18,
+        }}>
+            {specializations.map((s) => (
+                <Link key={s.name} to={`/search?specialization=${s.name}`} style={{ textDecoration: "none" }}>
                     <div
                         className="spec-card"
                         style={{
-                            background: "#fff",
-                            borderRadius: 22,
-                            padding: "32px 16px 24px",
-                            textAlign: "center",
-                            border: "1.5px solid #e0f0e8",
-                            cursor: "pointer",
+                            background: "#fff", borderRadius: 22,
+                            padding: "32px 16px 24px", textAlign: "center",
+                            border: "1.5px solid #e0f0e8", cursor: "pointer",
                             boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
-                            position: "relative",
-                            overflow: "hidden",
+                            position: "relative", overflow: "hidden",
                             transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s",
                         }}
                         onMouseEnter={(e) => {
@@ -107,54 +575,27 @@ function SpecializationGrid() {
                             e.currentTarget.style.borderColor = "#e0f0e8";
                         }}
                     >
-                        {/* Top accent bar */}
                         <div style={{
-                            position: "absolute",
-                            top: 0, left: 0, right: 0,
-                            height: 4,
-                            background: s.accent,
-                            borderRadius: "22px 22px 0 0",
-                            opacity: 0.7,
+                            position: "absolute", top: 0, left: 0, right: 0, height: 4,
+                            background: s.accent, borderRadius: "22px 22px 0 0", opacity: 0.7,
                         }} />
-
-                        {/* Icon bubble */}
                         <div style={{
-                            width: 68,
-                            height: 68,
-                            borderRadius: 20,
-                            background: s.bg,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 32,
-                            margin: "0 auto 16px",
-                            boxShadow: `0 6px 20px rgba(0,0,0,0.08)`,
-                            position: "relative",
+                            width: 68, height: 68, borderRadius: 20,
+                            background: s.bg, display: "flex",
+                            alignItems: "center", justifyContent: "center",
+                            fontSize: 32, margin: "0 auto 16px",
+                            boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
                         }}>
                             {s.icon}
                         </div>
-
-                        <p style={{
-                            fontSize: 14,
-                            fontWeight: 700,
-                            color: "#0d3b1e",
-                            margin: "0 0 6px",
-                        }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: "#0d3b1e", margin: "0 0 6px" }}>
                             {s.name}
                         </p>
-
-                        {/* Count badge */}
                         <div style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 4,
-                            background: `${s.accent}15`,
-                            border: `1px solid ${s.accent}30`,
-                            borderRadius: 50,
-                            padding: "3px 10px",
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: s.accent,
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            background: `${s.accent}15`, border: `1px solid ${s.accent}30`,
+                            borderRadius: 50, padding: "3px 10px",
+                            fontSize: 11, fontWeight: 600, color: s.accent,
                         }}>
                             {s.count} ডাক্তার
                         </div>
@@ -165,56 +606,38 @@ function SpecializationGrid() {
     );
 }
 
-// ── Home ──
 function Home() {
     return (
         <div style={{ fontFamily: "'Hind Siliguri', sans-serif", background: "#f7fbf9", minHeight: "100vh" }}>
+            <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@700;800;900&display=swap" rel="stylesheet" />
 
-            <link
-                href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@700;800;900&display=swap"
-                rel="stylesheet"
-            />
-
-            {/* ── HERO ── */}
-            <section
-                style={{
-                    position: "relative",
-                    background: "linear-gradient(160deg, #062210 0%, #0d3b1e 40%, #1a6b38 80%, #2e9e56 100%)",
-                    padding: "80px 24px 100px",
-                    textAlign: "center",
-                    overflow: "hidden",
-                }}
-            >
+            {/* HERO */}
+            <section style={{
+                position: "relative",
+                background: "linear-gradient(160deg, #062210 0%, #0d3b1e 40%, #1a6b38 80%, #2e9e56 100%)",
+                padding: "80px 24px 100px", textAlign: "center", overflow: "hidden",
+            }}>
                 <div style={{
                     position: "absolute", inset: 0,
                     backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
-                    backgroundSize: "60px 60px",
-                    pointerEvents: "none",
+                    backgroundSize: "60px 60px", pointerEvents: "none",
                 }} />
                 <div style={{
                     position: "absolute", width: 500, height: 500, borderRadius: "50%",
                     background: "radial-gradient(circle, rgba(94,203,135,0.12) 0%, transparent 70%)",
                     top: -150, right: -150, pointerEvents: "none",
                 }} />
-                <div style={{
-                    position: "absolute", width: 350, height: 350, borderRadius: "50%",
-                    background: "radial-gradient(circle, rgba(240,192,64,0.07) 0%, transparent 70%)",
-                    bottom: -80, left: -80, pointerEvents: "none",
-                }} />
 
                 <div style={{ position: "relative", zIndex: 2, maxWidth: 720, margin: "0 auto" }}>
                     <div style={{
                         display: "inline-flex", alignItems: "center", gap: 8,
-                        background: "rgba(255,255,255,0.1)",
-                        border: "1px solid rgba(255,255,255,0.18)",
-                        borderRadius: 50, padding: "7px 18px",
-                        fontSize: 13, color: "#a8e6c0",
+                        background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.18)",
+                        borderRadius: 50, padding: "7px 18px", fontSize: 13, color: "#a8e6c0",
                         marginBottom: 28, backdropFilter: "blur(8px)",
                     }}>
                         <span style={{
                             width: 7, height: 7, borderRadius: "50%",
-                            background: "#5ecb87", boxShadow: "0 0 8px #5ecb87",
-                            display: "inline-block",
+                            background: "#5ecb87", boxShadow: "0 0 8px #5ecb87", display: "inline-block",
                         }} />
                         বাংলাদেশের নির্ভরযোগ্য স্বাস্থ্যসেবা প্ল্যাটফর্ম
                     </div>
@@ -222,19 +645,15 @@ function Home() {
                     <h1 style={{
                         fontFamily: "'Noto Serif Bengali', serif",
                         fontSize: "clamp(2.6rem, 6vw, 4.6rem)",
-                        fontWeight: 900, color: "#fff",
-                        lineHeight: 1.15, letterSpacing: "-1px",
-                        marginBottom: 16,
+                        fontWeight: 900, color: "#fff", lineHeight: 1.15,
+                        letterSpacing: "-1px", marginBottom: 16,
                         textShadow: "0 2px 12px rgba(0,0,0,0.2)",
                     }}>
                         সঠিক ডাক্তার,{" "}
                         <span style={{
                             background: "linear-gradient(135deg, #5ecb87, #f0c040)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                        }}>
-                            সঠিক সময়ে
-                        </span>
+                            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                        }}>সঠিক সময়ে</span>
                     </h1>
 
                     <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 17, marginBottom: 40, lineHeight: 1.7 }}>
@@ -265,52 +684,40 @@ function Home() {
 
             {/* Wave */}
             <div style={{ marginTop: -2, lineHeight: 0, background: "#0d3b1e" }}>
-                <svg viewBox="0 0 1200 70" xmlns="http://www.w3.org/2000/svg"
-                    preserveAspectRatio="none"
-                    style={{ display: "block", width: "100%", height: 70 }}>
+                <svg viewBox="0 0 1200 70" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style={{ display: "block", width: "100%", height: 70 }}>
                     <path d="M0,35 C200,70 400,0 600,35 C800,70 1000,10 1200,35 L1200,70 L0,70 Z" fill="#f7fbf9" />
                 </svg>
             </div>
 
-            {/* ── CONTENT ── */}
-            <div style={{ maxWidth: 960, margin: "0 auto", padding: "56px 24px 80px" }}>
+            {/* CONTENT */}
+            <div style={{ maxWidth: 1060, margin: "0 auto", padding: "64px 24px 80px" }}>
 
-                {/* Features */}
-                <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-                    gap: 18, marginBottom: 64,
-                }}>
-                    {features.map((f) => (
-                        <div key={f.title} style={{
-                            background: "#fff", borderRadius: 20,
-                            padding: "28px 22px", border: "1.5px solid #e4f0ea",
-                            transition: "all 0.2s ease",
-                        }}
-                            onMouseEnter={e => {
-                                e.currentTarget.style.borderColor = "#5ecb87";
-                                e.currentTarget.style.boxShadow = "0 8px 30px rgba(46,158,86,0.1)";
-                                e.currentTarget.style.transform = "translateY(-3px)";
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.borderColor = "#e4f0ea";
-                                e.currentTarget.style.boxShadow = "none";
-                                e.currentTarget.style.transform = "translateY(0)";
-                            }}
-                        >
-                            <div style={{
-                                width: 48, height: 48, borderRadius: 12,
-                                background: "#eef9f2",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                fontSize: 22, marginBottom: 14,
-                            }}>{f.icon}</div>
-                            <div style={{ fontWeight: 700, fontSize: 15, color: "#0d3b1e", marginBottom: 6 }}>{f.title}</div>
-                            <div style={{ fontSize: 13, color: "#5a7a66", lineHeight: 1.6 }}>{f.desc}</div>
-                        </div>
-                    ))}
+                {/* Section Header - Features */}
+                <div style={{ textAlign: "center", marginBottom: 40 }}>
+                    <span style={{
+                        display: "inline-block",
+                        background: "rgba(46,158,86,0.1)", color: "#2e9e56",
+                        border: "1px solid rgba(46,158,86,0.25)",
+                        borderRadius: 50, padding: "5px 16px",
+                        fontSize: 12, fontWeight: 600,
+                        letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12,
+                    }}>কেন আমরা</span>
+                    <h2 style={{
+                        fontFamily: "'Noto Serif Bengali', serif",
+                        fontSize: 28, fontWeight: 800, color: "#0d3b1e", marginBottom: 8,
+                    }}>আমাদের বিশেষত্ব</h2>
+                    <p style={{ color: "#5a7a66", fontSize: 14 }}>স্বাস্থ্য খোঁজি কেন বাংলাদেশের সেরা স্বাস্থ্যসেবা প্ল্যাটফর্ম</p>
+                    <div style={{
+                        width: 48, height: 4,
+                        background: "linear-gradient(90deg, #2e9e56, #5ecb87)",
+                        borderRadius: 4, margin: "12px auto 0",
+                    }} />
                 </div>
 
-                {/* Section Header */}
+                {/* 6 Feature Cards with scroll animation */}
+                <FeatureCards />
+
+                {/* Section Header - Specializations */}
                 <div style={{ textAlign: "center", marginBottom: 40 }}>
                     <span style={{
                         display: "inline-block",
@@ -332,7 +739,7 @@ function Home() {
                     }} />
                 </div>
 
-                {/* ── Animated Specialization Grid ── */}
+                {/* Specialization Grid */}
                 <SpecializationGrid />
 
                 {/* CTA Banner */}
@@ -362,17 +769,16 @@ function Home() {
                     <a href="tel:16000" style={{
                         background: "#fff", color: "#0d3b1e",
                         padding: "14px 32px", borderRadius: 50,
-                        fontFamily: "'Hind Siliguri', sans-serif",
                         fontWeight: 700, fontSize: 16, textDecoration: "none",
                         flexShrink: 0, boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
                         display: "inline-flex", alignItems: "center", gap: 8,
-                        transition: "all 0.2s ease", position: "relative",
+                        transition: "all 0.2s ease",
                     }}
-                        onMouseEnter={e => {
+                        onMouseEnter={(e) => {
                             e.currentTarget.style.transform = "translateY(-2px)";
                             e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.3)";
                         }}
-                        onMouseLeave={e => {
+                        onMouseLeave={(e) => {
                             e.currentTarget.style.transform = "translateY(0)";
                             e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)";
                         }}
