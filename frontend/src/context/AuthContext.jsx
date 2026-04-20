@@ -5,8 +5,13 @@ export const AuthContext = createContext();
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => {
         try {
-            const stored = localStorage.getItem("shastho_user");
-            return stored ? JSON.parse(stored) : null;
+            const stored = localStorage.getItem("user");
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                console.log("Stored user:", parsed);
+                return parsed;
+            }
+            return null;
         } catch {
             return null;
         }
@@ -14,12 +19,13 @@ export function AuthProvider({ children }) {
     const [loading] = useState(false);
 
     const login = (userData) => {
-        localStorage.setItem("shastho_user", JSON.stringify(userData));
+        console.log("Login userData:", userData);
+        localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
     };
 
     const logout = () => {
-        localStorage.removeItem("shastho_user");
+        localStorage.removeItem("user");
         setUser(null);
     };
 
