@@ -16,6 +16,12 @@ import ManageAppointments from "./pages/admin/ManageAppointments";
 import ManageUsers from "./pages/admin/ManageUsers";
 import ManageBanners from "./pages/admin/ManageBanners";
 import ManageBlogs from "./pages/admin/ManageBlogs";
+import About from "./pages/About";
+import Hospitals from "./pages/Hospitals";
+import Tips from "./pages/Tips";
+import ManageAbout from "./pages/admin/ManageAbout";
+import ManageHospitals from "./pages/admin/ManageHospitals";
+import ManageTips from "./pages/admin/ManageTips";
 
 const queryClient = new QueryClient();
 
@@ -52,13 +58,21 @@ function AppRoutes() {
       <Route path="/doctor/:id" element={<PublicLayout><DoctorProfile /></PublicLayout>} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/hospitals" element={<PublicLayout><Hospitals /></PublicLayout>} />
+      <Route path="/tips" element={<PublicLayout><Tips /></PublicLayout>} />
+      <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
       <Route path="/appointments" element={<ProtectedRoute><PublicLayout><Appointments /></PublicLayout></ProtectedRoute>} />
+
+      {/* Admin Routes */}
       <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
       <Route path="/admin/doctors" element={<AdminRoute><ManageDoctors /></AdminRoute>} />
       <Route path="/admin/appointments" element={<AdminRoute><ManageAppointments /></AdminRoute>} />
       <Route path="/admin/users" element={<AdminRoute><ManageUsers /></AdminRoute>} />
       <Route path="/admin/banners" element={<AdminRoute><ManageBanners /></AdminRoute>} />
       <Route path="/admin/blogs" element={<AdminRoute><ManageBlogs /></AdminRoute>} />
+      <Route path="/admin/about" element={<AdminRoute><ManageAbout /></AdminRoute>} />
+      <Route path="/admin/hospitals" element={<AdminRoute><ManageHospitals /></AdminRoute>} />
+      <Route path="/admin/tips" element={<AdminRoute><ManageTips /></AdminRoute>} />
     </Routes>
   );
 }
