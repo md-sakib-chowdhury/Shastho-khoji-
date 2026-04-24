@@ -1,53 +1,48 @@
 import { useEffect } from "react";
 
-/**
- * useWelcomeVoice
- * – Home page mount হলে বা ফিরে আসলে Bengali welcome voice বাজবে।
- * – প্রতিটা visit-এ play হবে।
- */
-export default function useWelcomeVoice() {
+export function useWelcomeVoice(shouldPlay) {
     useEffect(() => {
-        // Browser support check
+        if (!shouldPlay) return;
         if (!window.speechSynthesis) return;
 
-        // পুরনো কোনো speech চলতে থাকলে বন্ধ করো
-        window.speechSynthesis.cancel();
-
         const message =
-            "স্বাস্থ্য খোঁজিতে আপনাকে স্বাগতম। " +
-            "আপনার কাছের বিশেষজ্ঞ ডাক্তার খুঁজুন — সহজে, দ্রুত এবং বিশ্বস্তভাবে।";
+            "স্বাস্থ্য খোঁজিতে আপনাকে স্বাগতম। আপনার পছন্দের ডাক্তার খুঁজুন সহজেই।";
 
-        const speak = () => {
+        const doSpeak = () => {
+            window.speechSynthesis.cancel();
+
             const utter = new SpeechSynthesisUtterance(message);
-
-            // Bengali voice খোঁজার চেষ্টা, না পেলে default
-            const voices = window.speechSynthesis.getVoices();
-            const bengaliVoice =
-                voices.find((v) => v.lang === "bn-BD") ||
-                voices.find((v) => v.lang === "bn-IN") ||
-                voices.find((v) => v.lang.startsWith("bn")) ||
-                null;
-
-            if (bengaliVoice) utter.voice = bengaliVoice;
-            utter.lang = bengaliVoice ? bengaliVoice.lang : "bn-BD";
-            utter.rate = 0.88;   // একটু ধীরে — স্পষ্ট শোনাবে
-            utter.pitch = 1.05;
+            utter.lang = "bn-BD";
+            utter.rate = 0.85;
+            utter.pitch = 1;
             utter.volume = 1;
+
+            // Bengali voice খোঁজো, না পেলে Hindi, না পেলে যেটা আছে সেটা
+            const voices = window.speechSynthesis.getVoices();
+            const preferred =
+                voices.find((v) => v.lang.startsWith("bn")) ||
+                voices.find((v) => v.lang.startsWith("hi")) ||
+                voices[0];
+
+            if (preferred) utter.voice = preferred;
 
             window.speechSynthesis.speak(utter);
         };
 
-        // Voices async load হয় — তাই দুভাবে handle করা হলো
+        // voices list অনেক সময় empty থাকে প্রথমে — wait করতে হবে
         const voices = window.speechSynthesis.getVoices();
         if (voices.length > 0) {
-            speak();
+            doSpeak();
         } else {
-            window.speechSynthesis.addEventListener("voiceschanged", speak, { once: true });
-        }
+            // onvoiceschanged event এর জন্য অপেক্ষা করো
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.onvoiceschanged = null;
+                doSpeak();
+            };
 
-        // Page ছাড়লে voice বন্ধ
-        return () => {
-            window.speechSynthesis.cancel();
-        };
-    }, []); // [] মানে শুধু mount-এ চলবে; navigate করে ফিরলে re-mount হবে
+            // fallback: ৩০০ms পরেও try করো
+            const fallback = setTimeout(doSpeak, 300);
+            return () => clearTimeout(fallback);
+        }
+    }, [shouldPlay]);
 }

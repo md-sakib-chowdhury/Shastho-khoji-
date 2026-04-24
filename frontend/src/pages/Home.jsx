@@ -1583,9 +1583,9 @@
 //     );
 // }
 import { Link } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import SearchBar from "../components/SearchBar";
-import useWelcomeVoice from "../hooks/useWelcomeVoice"; // ✅ import
+import { AuthContext } from "../context/AuthContext";
 
 const specializations = [
     { name: "মেডিসিন", icon: "💊", bg: "linear-gradient(135deg, #e8f5e9, #c8e6c9)", accent: "#2e7d32", count: "১২০+" },
@@ -1640,7 +1640,107 @@ const symptomMap = {
 
 const allSymptoms = Object.keys(symptomMap);
 
-// ── 1. Live Stats Counter ──
+// ── Voice helper ──────────────────────────────────────────────────────────────
+function playVoice(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "bn-BD";
+    utter.rate = 0.88;
+    utter.pitch = 1.05;
+    utter.volume = 1;
+
+    const trySpeak = () => {
+        const voices = window.speechSynthesis.getVoices();
+        const voice =
+            voices.find((v) => v.lang === "bn-BD") ||
+            voices.find((v) => v.lang === "bn-IN") ||
+            voices.find((v) => v.lang.startsWith("bn")) ||
+            voices.find((v) => v.lang.startsWith("hi")) ||
+            null;
+        if (voice) utter.voice = voice;
+        window.speechSynthesis.speak(utter);
+    };
+
+    if (window.speechSynthesis.getVoices().length > 0) {
+        trySpeak();
+    } else {
+        window.speechSynthesis.onvoiceschanged = () => {
+            window.speechSynthesis.onvoiceschanged = null;
+            trySpeak();
+        };
+        setTimeout(trySpeak, 300);
+    }
+}
+
+// ── Welcome Voice Popup ───────────────────────────────────────────────────────
+function WelcomeVoicePopup({ onClose }) {
+    const handleStart = () => {
+        playVoice("স্বাস্থ্য খোঁজিতে আপনাকে স্বাগতম। আপনার পছন্দের ডাক্তার খুঁজুন সহজেই।");
+        onClose();
+    };
+
+    return (
+        <div style={{
+            position: "fixed", inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 9999,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 16,
+        }}>
+            <div style={{
+                background: "#fff", borderRadius: 24,
+                padding: "40px 32px", maxWidth: 380, width: "100%",
+                textAlign: "center",
+                boxShadow: "0 24px 80px rgba(0,0,0,0.18)",
+                animation: "popIn 0.35s cubic-bezier(0.34,1.56,0.64,1)",
+            }}>
+                <div style={{ fontSize: 52, marginBottom: 14 }}>🏥</div>
+                <h2 style={{
+                    fontFamily: "'Noto Serif Bengali', serif",
+                    fontSize: 22, color: "#0d3b1e", margin: "0 0 10px",
+                }}>স্বাস্থ্য খোঁজিতে স্বাগতম!</h2>
+                <p style={{
+                    fontFamily: "'Hind Siliguri', sans-serif",
+                    color: "#5a7a66", fontSize: 14,
+                    marginBottom: 28, lineHeight: 1.7,
+                }}>
+                    আপনার স্বাস্থ্যসেবার বিশ্বস্ত সঙ্গী।<br />
+                    শুরু করতে নিচের বাটনে চাপুন।
+                </p>
+                <button onClick={handleStart} style={{
+                    width: "100%", padding: "14px",
+                    borderRadius: 50, border: "none",
+                    background: "linear-gradient(135deg, #2e9e56, #1a6b38)",
+                    color: "#fff",
+                    fontFamily: "'Hind Siliguri', sans-serif",
+                    fontSize: 16, fontWeight: 700,
+                    cursor: "pointer", marginBottom: 12,
+                    boxShadow: "0 6px 20px rgba(46,158,86,0.35)",
+                }}>
+                    🔊 শুরু করুন
+                </button>
+                <button onClick={onClose} style={{
+                    background: "none", border: "none",
+                    color: "#9ca3af",
+                    fontFamily: "'Hind Siliguri', sans-serif",
+                    fontSize: 13, cursor: "pointer", textDecoration: "underline",
+                }}>
+                    এড়িয়ে যান
+                </button>
+            </div>
+            <style>{`
+                @keyframes popIn {
+                    from { transform: scale(0.8); opacity: 0; }
+                    to   { transform: scale(1);   opacity: 1; }
+                }
+            `}</style>
+        </div>
+    );
+}
+
+// ── 1. Live Stats Counter ─────────────────────────────────────────────────────
 function LiveStatsCounter() {
     const statsData = [
         { value: 500, suffix: "+", label: "বিশেষজ্ঞ ডাক্তার" },
@@ -1698,7 +1798,7 @@ function LiveStatsCounter() {
     );
 }
 
-// ── 2. AI Symptom Checker ──
+// ── 2. AI Symptom Checker ─────────────────────────────────────────────────────
 function AISymptomChecker() {
     const [selected, setSelected] = useState([]);
     const [result, setResult] = useState(null);
@@ -1725,28 +1825,15 @@ function AISymptomChecker() {
             const res = { spec: topSpec, ...matched };
             setResult(res);
             setLoading(false);
-
-            // ✅ Result পাওয়ার পর voice দিয়ে পড়ে শোনাবে
-            if (window.speechSynthesis) {
-                window.speechSynthesis.cancel();
-                const text = `আপনার লক্ষণ অনুযায়ী ${topSpec} বিশেষজ্ঞ ডাক্তারের পরামর্শ নেওয়া উচিত।`;
-                const utter = new SpeechSynthesisUtterance(text);
-                const voices = window.speechSynthesis.getVoices();
-                const bengaliVoice =
-                    voices.find(v => v.lang === "bn-BD") ||
-                    voices.find(v => v.lang === "bn-IN") ||
-                    voices.find(v => v.lang.startsWith("bn")) || null;
-                if (bengaliVoice) utter.voice = bengaliVoice;
-                utter.lang = bengaliVoice ? bengaliVoice.lang : "bn-BD";
-                utter.rate = 0.88;
-                utter.pitch = 1.05;
-                utter.volume = 1;
-                window.speechSynthesis.speak(utter);
-            }
+            playVoice(`আপনার লক্ষণ অনুযায়ী ${topSpec} বিশেষজ্ঞ ডাক্তারের পরামর্শ নেওয়া উচিত।`);
         }, 1200);
     };
 
-    const reset = () => { setSelected([]); setResult(null); window.speechSynthesis?.cancel(); };
+    const reset = () => {
+        setSelected([]);
+        setResult(null);
+        window.speechSynthesis?.cancel();
+    };
 
     useEffect(() => {
         const el = sectionRef.current;
@@ -1768,21 +1855,13 @@ function AISymptomChecker() {
     return (
         <div ref={sectionRef} style={{ marginBottom: 72 }}>
             <div style={{ textAlign: "center", marginBottom: 40 }}>
-                <span style={{
-                    display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56",
-                    border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px",
-                    fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12,
-                }}>AI সহায়তা</span>
+                <span style={{ display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56", border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12 }}>AI সহায়তা</span>
                 <h2 style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 28, fontWeight: 800, color: "#0d3b1e", marginBottom: 8 }}>লক্ষণ দিয়ে ডাক্তার খুঁজুন</h2>
                 <p style={{ color: "#5a7a66", fontSize: 14 }}>আপনার সমস্যা বেছে নিন — AI আপনাকে সঠিক বিশেষজ্ঞ সাজেস্ট করবে</p>
                 <div style={{ width: 48, height: 4, background: "linear-gradient(90deg, #2e9e56, #5ecb87)", borderRadius: 4, margin: "12px auto 0" }} />
             </div>
 
-            <div style={{
-                background: "#fff", borderRadius: 28,
-                boxShadow: "0 8px 40px rgba(13,59,30,0.10)",
-                border: "1.5px solid #e0f0e8", overflow: "hidden",
-            }}>
+            <div style={{ background: "#fff", borderRadius: 28, boxShadow: "0 8px 40px rgba(13,59,30,0.10)", border: "1.5px solid #e0f0e8", overflow: "hidden" }}>
                 <div style={{ height: 5, background: "linear-gradient(90deg, #2e9e56, #5ecb87, #f0c040)" }} />
                 <div style={{ padding: "36px 36px 32px" }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: "#5a7a66", marginBottom: 16 }}>
@@ -1837,31 +1916,17 @@ function AISymptomChecker() {
 
                     {loading && (
                         <div style={{ marginTop: 28, padding: "24px", background: "#f7fbf9", borderRadius: 18, textAlign: "center" }}>
-                            <div style={{
-                                display: "inline-block", width: 36, height: 36,
-                                border: "3px solid #e0f0e8", borderTop: "3px solid #2e9e56",
-                                borderRadius: "50%", animation: "spin 0.8s linear infinite",
-                            }} />
+                            <div style={{ display: "inline-block", width: 36, height: 36, border: "3px solid #e0f0e8", borderTop: "3px solid #2e9e56", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
                             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                             <p style={{ marginTop: 12, color: "#5a7a66", fontSize: 13 }}>আপনার লক্ষণ বিশ্লেষণ করা হচ্ছে...</p>
                         </div>
                     )}
 
                     {result && !loading && (
-                        <div style={{
-                            marginTop: 28,
-                            background: `linear-gradient(135deg, ${result.bg}, #fff)`,
-                            border: `2px solid ${result.color}30`,
-                            borderRadius: 20, padding: "28px",
-                            animation: "fadeInUp 0.5s ease",
-                        }}>
+                        <div style={{ marginTop: 28, background: `linear-gradient(135deg, ${result.bg}, #fff)`, border: `2px solid ${result.color}30`, borderRadius: 20, padding: "28px", animation: "fadeInUp 0.5s ease" }}>
                             <style>{`@keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }`}</style>
                             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
-                                <div style={{
-                                    width: 56, height: 56, borderRadius: 16, background: "#fff",
-                                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28,
-                                    boxShadow: `0 6px 20px ${result.color}25`, border: `2px solid ${result.color}20`,
-                                }}>{result.icon}</div>
+                                <div style={{ width: 56, height: 56, borderRadius: 16, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, boxShadow: `0 6px 20px ${result.color}25`, border: `2px solid ${result.color}20` }}>{result.icon}</div>
                                 <div>
                                     <p style={{ fontSize: 11, color: result.color, fontWeight: 700, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>AI সাজেশন</p>
                                     <p style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 20, fontWeight: 800, color: "#0d3b1e", margin: 0 }}>{result.spec} বিশেষজ্ঞ</p>
@@ -1872,17 +1937,9 @@ function AISymptomChecker() {
                             </p>
                             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                                 <Link to={`/search?specialization=${result.spec}`} style={{ textDecoration: "none" }}>
-                                    <div style={{
-                                        background: result.color, color: "#fff", borderRadius: 50,
-                                        padding: "11px 24px", fontSize: 13, fontWeight: 700,
-                                        boxShadow: `0 4px 16px ${result.color}40`, cursor: "pointer",
-                                    }}>এখনই ডাক্তার দেখুন →</div>
+                                    <div style={{ background: result.color, color: "#fff", borderRadius: 50, padding: "11px 24px", fontSize: 13, fontWeight: 700, boxShadow: `0 4px 16px ${result.color}40`, cursor: "pointer" }}>এখনই ডাক্তার দেখুন →</div>
                                 </Link>
-                                <div style={{
-                                    background: "rgba(255,255,255,0.8)", border: `1.5px solid ${result.color}30`,
-                                    color: result.color, borderRadius: 50, padding: "10px 20px",
-                                    fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 6,
-                                }}>⚠️ এটি AI সাজেশন, চিকিৎসকের পরামর্শই চূড়ান্ত</div>
+                                <div style={{ background: "rgba(255,255,255,0.8)", border: `1.5px solid ${result.color}30`, color: result.color, borderRadius: 50, padding: "10px 20px", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>⚠️ এটি AI সাজেশন, চিকিৎসকের পরামর্শই চূড়ান্ত</div>
                             </div>
                         </div>
                     )}
@@ -1892,7 +1949,7 @@ function AISymptomChecker() {
     );
 }
 
-// ── Feature Cards ──
+// ── Feature Cards ─────────────────────────────────────────────────────────────
 function FeatureCards() {
     const cardsRef = useRef([]);
     useEffect(() => {
@@ -1932,7 +1989,7 @@ function FeatureCards() {
     );
 }
 
-// ── Specialization Grid ──
+// ── Specialization Grid ───────────────────────────────────────────────────────
 function SpecializationGrid() {
     const gridRef = useRef(null);
     useEffect(() => {
@@ -1984,7 +2041,7 @@ function SpecializationGrid() {
     );
 }
 
-// ── How It Works ──
+// ── How It Works ──────────────────────────────────────────────────────────────
 function HowItWorks() {
     const steps = [
         { icon: "🔍", step: "০১", title: "ডাক্তার খুঁজুন", desc: "বিভাগ, নাম বা এলাকা দিয়ে আপনার পছন্দের বিশেষজ্ঞ খুঁজুন", color: "#2e7d32", bg: "#eef9f2", to: "/search", btnLabel: "এখনই খুঁজুন →" },
@@ -2045,7 +2102,7 @@ function HowItWorks() {
     );
 }
 
-// ── Testimonials ──
+// ── Testimonials ──────────────────────────────────────────────────────────────
 function Testimonials() {
     const sectionRef = useRef(null);
     const cardsRef = useRef([]);
@@ -2098,7 +2155,7 @@ function Testimonials() {
     );
 }
 
-// ── Featured Doctors ──
+// ── Featured Doctors ──────────────────────────────────────────────────────────
 function FeaturedDoctors() {
     const sectionRef = useRef(null);
     const cardsRef = useRef([]);
@@ -2165,13 +2222,24 @@ function FeaturedDoctors() {
     );
 }
 
-// ── Home ──
+// ── Home ──────────────────────────────────────────────────────────────────────
 function Home() {
-    useWelcomeVoice(); // ✅ Home mount/revisit হলে Bengali voice বাজবে
+    const { user } = useContext(AuthContext);
+    const [showPopup, setShowPopup] = useState(false);
+
+    useEffect(() => {
+        // admin হলে popup দেখাবে না
+        if (user?.role === "admin") return;
+        const timer = setTimeout(() => setShowPopup(true), 600);
+        return () => clearTimeout(timer);
+    }, [user]);
 
     return (
         <div style={{ fontFamily: "'Hind Siliguri', sans-serif", background: "#f7fbf9", minHeight: "100vh" }}>
             <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@700;800;900&display=swap" rel="stylesheet" />
+
+            {/* Welcome Voice Popup — admin হলে আসবে না */}
+            {showPopup && <WelcomeVoicePopup onClose={() => setShowPopup(false)} />}
 
             {/* HERO */}
             <section style={{
@@ -2215,7 +2283,6 @@ function Home() {
 
             {/* CONTENT */}
             <div style={{ maxWidth: 1060, margin: "0 auto", padding: "64px 24px 80px" }}>
-
                 <div style={{ textAlign: "center", marginBottom: 40 }}>
                     <span style={{ display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56", border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12 }}>কেন আমরা</span>
                     <h2 style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 28, fontWeight: 800, color: "#0d3b1e", marginBottom: 8 }}>আমাদের বিশেষত্ব</h2>
