@@ -1585,6 +1585,7 @@
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import SearchBar from "../components/SearchBar";
+import useWelcomeVoice from "../hooks/useWelcomeVoice"; // ✅ import
 
 const specializations = [
     { name: "মেডিসিন", icon: "💊", bg: "linear-gradient(135deg, #e8f5e9, #c8e6c9)", accent: "#2e7d32", count: "১২০+" },
@@ -1622,7 +1623,6 @@ const featuredDoctors = [
     { name: "ডা. নুসরাত জাহান", spec: "গাইনি বিশেষজ্ঞ", exp: "১০ বছর", rating: "৪.৭", patients: "১,৫০০+", avatar: "ন", color: "#f57f17", bg: "#fff8e1" },
 ];
 
-// ── symptom → specialization map ──
 const symptomMap = {
     "জ্বর": { spec: "মেডিসিন", icon: "💊", color: "#2e7d32", bg: "#eef9f2" },
     "মাথাব্যথা": { spec: "মেডিসিন", icon: "💊", color: "#2e7d32", bg: "#eef9f2" },
@@ -1647,7 +1647,6 @@ function LiveStatsCounter() {
         { value: 64, suffix: "", label: "জেলায় সেবা" },
         { value: 10, suffix: " লাখ+", label: "রোগী সেবা পেয়েছেন" },
     ];
-
     const countersRef = useRef([]);
     const sectionRef = useRef(null);
     const hasAnimated = useRef(false);
@@ -1667,11 +1666,7 @@ function LiveStatsCounter() {
                         let current = 0;
                         const timer = setInterval(() => {
                             current += increment;
-                            if (current >= target) {
-                                current = target;
-                                clearInterval(timer);
-                            }
-                            // convert to Bangla digits
+                            if (current >= target) { current = target; clearInterval(timer); }
                             const banglaDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
                             const num = Math.floor(current).toString().replace(/\d/g, d => banglaDigits[d]);
                             el.textContent = num + suffix;
@@ -1692,15 +1687,10 @@ function LiveStatsCounter() {
                     padding: "0 32px", textAlign: "center",
                     borderRight: i < statsData.length - 1 ? "1px solid rgba(255,255,255,0.15)" : "none",
                 }}>
-                    <div
-                        ref={(el) => (countersRef.current[i] = el)}
-                        style={{
-                            fontFamily: "'Noto Serif Bengali', serif",
-                            fontSize: 26, fontWeight: 900, color: "#fff", marginBottom: 4,
-                        }}
-                    >
-                        ০
-                    </div>
+                    <div ref={(el) => (countersRef.current[i] = el)} style={{
+                        fontFamily: "'Noto Serif Bengali', serif",
+                        fontSize: 26, fontWeight: 900, color: "#fff", marginBottom: 4,
+                    }}>০</div>
                     <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{s.label}</div>
                 </div>
             ))}
@@ -1716,9 +1706,7 @@ function AISymptomChecker() {
     const sectionRef = useRef(null);
 
     const toggleSymptom = (sym) => {
-        setSelected(prev =>
-            prev.includes(sym) ? prev.filter(s => s !== sym) : [...prev, sym]
-        );
+        setSelected(prev => prev.includes(sym) ? prev.filter(s => s !== sym) : [...prev, sym]);
         setResult(null);
     };
 
@@ -1726,9 +1714,7 @@ function AISymptomChecker() {
         if (selected.length === 0) return;
         setLoading(true);
         setResult(null);
-
         setTimeout(() => {
-            // count which specialization appears most
             const specCount = {};
             selected.forEach(sym => {
                 const s = symptomMap[sym]?.spec;
@@ -1736,12 +1722,31 @@ function AISymptomChecker() {
             });
             const topSpec = Object.entries(specCount).sort((a, b) => b[1] - a[1])[0]?.[0];
             const matched = Object.values(symptomMap).find(v => v.spec === topSpec);
-            setResult({ spec: topSpec, ...matched });
+            const res = { spec: topSpec, ...matched };
+            setResult(res);
             setLoading(false);
+
+            // ✅ Result পাওয়ার পর voice দিয়ে পড়ে শোনাবে
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+                const text = `আপনার লক্ষণ অনুযায়ী ${topSpec} বিশেষজ্ঞ ডাক্তারের পরামর্শ নেওয়া উচিত।`;
+                const utter = new SpeechSynthesisUtterance(text);
+                const voices = window.speechSynthesis.getVoices();
+                const bengaliVoice =
+                    voices.find(v => v.lang === "bn-BD") ||
+                    voices.find(v => v.lang === "bn-IN") ||
+                    voices.find(v => v.lang.startsWith("bn")) || null;
+                if (bengaliVoice) utter.voice = bengaliVoice;
+                utter.lang = bengaliVoice ? bengaliVoice.lang : "bn-BD";
+                utter.rate = 0.88;
+                utter.pitch = 1.05;
+                utter.volume = 1;
+                window.speechSynthesis.speak(utter);
+            }
         }, 1200);
     };
 
-    const reset = () => { setSelected([]); setResult(null); };
+    const reset = () => { setSelected([]); setResult(null); window.speechSynthesis?.cancel(); };
 
     useEffect(() => {
         const el = sectionRef.current;
@@ -1762,38 +1767,24 @@ function AISymptomChecker() {
 
     return (
         <div ref={sectionRef} style={{ marginBottom: 72 }}>
-            {/* Section Header */}
             <div style={{ textAlign: "center", marginBottom: 40 }}>
                 <span style={{
                     display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56",
                     border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px",
                     fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12,
                 }}>AI সহায়তা</span>
-                <h2 style={{
-                    fontFamily: "'Noto Serif Bengali', serif",
-                    fontSize: 28, fontWeight: 800, color: "#0d3b1e", marginBottom: 8,
-                }}>লক্ষণ দিয়ে ডাক্তার খুঁজুন</h2>
+                <h2 style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 28, fontWeight: 800, color: "#0d3b1e", marginBottom: 8 }}>লক্ষণ দিয়ে ডাক্তার খুঁজুন</h2>
                 <p style={{ color: "#5a7a66", fontSize: 14 }}>আপনার সমস্যা বেছে নিন — AI আপনাকে সঠিক বিশেষজ্ঞ সাজেস্ট করবে</p>
-                <div style={{
-                    width: 48, height: 4, background: "linear-gradient(90deg, #2e9e56, #5ecb87)",
-                    borderRadius: 4, margin: "12px auto 0",
-                }} />
+                <div style={{ width: 48, height: 4, background: "linear-gradient(90deg, #2e9e56, #5ecb87)", borderRadius: 4, margin: "12px auto 0" }} />
             </div>
 
             <div style={{
                 background: "#fff", borderRadius: 28,
                 boxShadow: "0 8px 40px rgba(13,59,30,0.10)",
-                border: "1.5px solid #e0f0e8",
-                overflow: "hidden",
+                border: "1.5px solid #e0f0e8", overflow: "hidden",
             }}>
-                {/* Top gradient bar */}
-                <div style={{
-                    height: 5,
-                    background: "linear-gradient(90deg, #2e9e56, #5ecb87, #f0c040)",
-                }} />
-
+                <div style={{ height: 5, background: "linear-gradient(90deg, #2e9e56, #5ecb87, #f0c040)" }} />
                 <div style={{ padding: "36px 36px 32px" }}>
-                    {/* Symptom chips */}
                     <p style={{ fontSize: 13, fontWeight: 600, color: "#5a7a66", marginBottom: 16 }}>
                         🩺 আপনার লক্ষণ বেছে নিন (একাধিক সিলেক্ট করতে পারবেন):
                     </p>
@@ -1802,155 +1793,96 @@ function AISymptomChecker() {
                             const isSelected = selected.includes(sym);
                             const info = symptomMap[sym];
                             return (
-                                <button
-                                    key={sym}
-                                    onClick={() => toggleSymptom(sym)}
-                                    style={{
-                                        padding: "9px 18px",
-                                        borderRadius: 50,
-                                        border: `2px solid ${isSelected ? info.color : "#d4e8da"}`,
-                                        background: isSelected ? info.color : "#fff",
-                                        color: isSelected ? "#fff" : "#3a5a46",
-                                        fontSize: 13, fontWeight: 600,
-                                        cursor: "pointer",
-                                        transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)",
-                                        transform: isSelected ? "scale(1.06)" : "scale(1)",
-                                        boxShadow: isSelected ? `0 4px 16px ${info.color}40` : "none",
-                                        fontFamily: "'Hind Siliguri', sans-serif",
-                                    }}
-                                >
-                                    {sym}
-                                </button>
+                                <button key={sym} onClick={() => toggleSymptom(sym)} style={{
+                                    padding: "9px 18px", borderRadius: 50,
+                                    border: `2px solid ${isSelected ? info.color : "#d4e8da"}`,
+                                    background: isSelected ? info.color : "#fff",
+                                    color: isSelected ? "#fff" : "#3a5a46",
+                                    fontSize: 13, fontWeight: 600, cursor: "pointer",
+                                    transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)",
+                                    transform: isSelected ? "scale(1.06)" : "scale(1)",
+                                    boxShadow: isSelected ? `0 4px 16px ${info.color}40` : "none",
+                                    fontFamily: "'Hind Siliguri', sans-serif",
+                                }}>{sym}</button>
                             );
                         })}
                     </div>
 
-                    {/* Selected count */}
                     {selected.length > 0 && (
                         <p style={{ fontSize: 12, color: "#2e9e56", marginBottom: 16, fontWeight: 600 }}>
                             ✅ {selected.length}টি লক্ষণ বেছেছেন: {selected.join(", ")}
                         </p>
                     )}
 
-                    {/* Analyze button */}
                     <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                        <button
-                            onClick={analyze}
-                            disabled={selected.length === 0 || loading}
-                            style={{
-                                background: selected.length === 0
-                                    ? "#ccc"
-                                    : "linear-gradient(135deg, #2e9e56, #1a6b38)",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: 50,
-                                padding: "13px 32px",
-                                fontSize: 14, fontWeight: 700,
-                                cursor: selected.length === 0 ? "not-allowed" : "pointer",
-                                boxShadow: selected.length > 0 ? "0 6px 20px rgba(46,158,86,0.35)" : "none",
-                                transition: "all 0.2s ease",
-                                fontFamily: "'Hind Siliguri', sans-serif",
-                            }}
-                        >
+                        <button onClick={analyze} disabled={selected.length === 0 || loading} style={{
+                            background: selected.length === 0 ? "#ccc" : "linear-gradient(135deg, #2e9e56, #1a6b38)",
+                            color: "#fff", border: "none", borderRadius: 50,
+                            padding: "13px 32px", fontSize: 14, fontWeight: 700,
+                            cursor: selected.length === 0 ? "not-allowed" : "pointer",
+                            boxShadow: selected.length > 0 ? "0 6px 20px rgba(46,158,86,0.35)" : "none",
+                            transition: "all 0.2s ease", fontFamily: "'Hind Siliguri', sans-serif",
+                        }}>
                             {loading ? "⏳ বিশ্লেষণ হচ্ছে..." : "🔍 ডাক্তার খুঁজুন"}
                         </button>
                         {selected.length > 0 && (
-                            <button
-                                onClick={reset}
-                                style={{
-                                    background: "transparent", color: "#5a7a66",
-                                    border: "1.5px solid #d4e8da", borderRadius: 50,
-                                    padding: "12px 22px", fontSize: 13, fontWeight: 600,
-                                    cursor: "pointer", fontFamily: "'Hind Siliguri', sans-serif",
-                                }}
-                            >
-                                রিসেট করুন
-                            </button>
+                            <button onClick={reset} style={{
+                                background: "transparent", color: "#5a7a66",
+                                border: "1.5px solid #d4e8da", borderRadius: 50,
+                                padding: "12px 22px", fontSize: 13, fontWeight: 600,
+                                cursor: "pointer", fontFamily: "'Hind Siliguri', sans-serif",
+                            }}>রিসেট করুন</button>
                         )}
                     </div>
 
-                    {/* Loading animation */}
                     {loading && (
-                        <div style={{
-                            marginTop: 28, padding: "24px",
-                            background: "#f7fbf9", borderRadius: 18,
-                            textAlign: "center",
-                        }}>
+                        <div style={{ marginTop: 28, padding: "24px", background: "#f7fbf9", borderRadius: 18, textAlign: "center" }}>
                             <div style={{
-                                display: "inline-block",
-                                width: 36, height: 36,
-                                border: "3px solid #e0f0e8",
-                                borderTop: "3px solid #2e9e56",
-                                borderRadius: "50%",
-                                animation: "spin 0.8s linear infinite",
+                                display: "inline-block", width: 36, height: 36,
+                                border: "3px solid #e0f0e8", borderTop: "3px solid #2e9e56",
+                                borderRadius: "50%", animation: "spin 0.8s linear infinite",
                             }} />
                             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                            <p style={{ marginTop: 12, color: "#5a7a66", fontSize: 13 }}>
-                                আপনার লক্ষণ বিশ্লেষণ করা হচ্ছে...
-                            </p>
+                            <p style={{ marginTop: 12, color: "#5a7a66", fontSize: 13 }}>আপনার লক্ষণ বিশ্লেষণ করা হচ্ছে...</p>
                         </div>
                     )}
 
-                    {/* Result */}
                     {result && !loading && (
                         <div style={{
                             marginTop: 28,
                             background: `linear-gradient(135deg, ${result.bg}, #fff)`,
                             border: `2px solid ${result.color}30`,
-                            borderRadius: 20, padding: "28px 28px",
+                            borderRadius: 20, padding: "28px",
                             animation: "fadeInUp 0.5s ease",
                         }}>
-                            <style>{`
-                                @keyframes fadeInUp {
-                                    from { opacity: 0; transform: translateY(16px); }
-                                    to   { opacity: 1; transform: translateY(0); }
-                                }
-                            `}</style>
+                            <style>{`@keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }`}</style>
                             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
                                 <div style={{
-                                    width: 56, height: 56, borderRadius: 16,
-                                    background: "#fff",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    fontSize: 28,
-                                    boxShadow: `0 6px 20px ${result.color}25`,
-                                    border: `2px solid ${result.color}20`,
+                                    width: 56, height: 56, borderRadius: 16, background: "#fff",
+                                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28,
+                                    boxShadow: `0 6px 20px ${result.color}25`, border: `2px solid ${result.color}20`,
                                 }}>{result.icon}</div>
                                 <div>
-                                    <p style={{ fontSize: 11, color: result.color, fontWeight: 700, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                                        AI সাজেশন
-                                    </p>
-                                    <p style={{
-                                        fontFamily: "'Noto Serif Bengali', serif",
-                                        fontSize: 20, fontWeight: 800, color: "#0d3b1e", margin: 0,
-                                    }}>
-                                        {result.spec} বিশেষজ্ঞ
-                                    </p>
+                                    <p style={{ fontSize: 11, color: result.color, fontWeight: 700, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>AI সাজেশন</p>
+                                    <p style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 20, fontWeight: 800, color: "#0d3b1e", margin: 0 }}>{result.spec} বিশেষজ্ঞ</p>
                                 </div>
                             </div>
                             <p style={{ fontSize: 13, color: "#5a7a66", marginBottom: 20, lineHeight: 1.7 }}>
-                                আপনার লক্ষণ অনুযায়ী <strong style={{ color: result.color }}>{result.spec} বিশেষজ্ঞ</strong> ডাক্তারের পরামর্শ নেওয়া উচিত। দ্রুত অ্যাপয়েন্টমেন্ট নিতে নিচে ক্লিক করুন।
+                                আপনার লক্ষণ অনুযায়ী <strong style={{ color: result.color }}>{result.spec} বিশেষজ্ঞ</strong> ডাক্তারের পরামর্শ নেওয়া উচিত।
                             </p>
                             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                                 <Link to={`/search?specialization=${result.spec}`} style={{ textDecoration: "none" }}>
                                     <div style={{
-                                        background: result.color, color: "#fff",
-                                        borderRadius: 50, padding: "11px 24px",
-                                        fontSize: 13, fontWeight: 700,
-                                        boxShadow: `0 4px 16px ${result.color}40`,
-                                        cursor: "pointer",
-                                    }}>
-                                        এখনই ডাক্তার দেখুন →
-                                    </div>
+                                        background: result.color, color: "#fff", borderRadius: 50,
+                                        padding: "11px 24px", fontSize: 13, fontWeight: 700,
+                                        boxShadow: `0 4px 16px ${result.color}40`, cursor: "pointer",
+                                    }}>এখনই ডাক্তার দেখুন →</div>
                                 </Link>
                                 <div style={{
-                                    background: "rgba(255,255,255,0.8)",
-                                    border: `1.5px solid ${result.color}30`,
-                                    color: result.color, borderRadius: 50,
-                                    padding: "10px 20px", fontSize: 12, fontWeight: 600,
-                                    display: "flex", alignItems: "center", gap: 6,
-                                }}>
-                                    ⚠️ এটি AI সাজেশন, চিকিৎসকের পরামর্শই চূড়ান্ত
-                                </div>
+                                    background: "rgba(255,255,255,0.8)", border: `1.5px solid ${result.color}30`,
+                                    color: result.color, borderRadius: 50, padding: "10px 20px",
+                                    fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 6,
+                                }}>⚠️ এটি AI সাজেশন, চিকিৎসকের পরামর্শই চূড়ান্ত</div>
                             </div>
                         </div>
                     )}
@@ -1963,68 +1895,37 @@ function AISymptomChecker() {
 // ── Feature Cards ──
 function FeatureCards() {
     const cardsRef = useRef([]);
-
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = "1";
-                        entry.target.style.transform = "translateY(0) scale(1)";
-                    }
-                });
-            },
-            { threshold: 0.15 }
-        );
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = "1";
+                    entry.target.style.transform = "translateY(0) scale(1)";
+                }
+            });
+        }, { threshold: 0.15 });
         cardsRef.current.forEach((card) => { if (card) observer.observe(card); });
         return () => observer.disconnect();
     }, []);
 
     return (
-        <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: 20, marginBottom: 72,
-        }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20, marginBottom: 72 }}>
             {features.map((f, i) => (
-                <div
-                    key={f.title}
-                    ref={(el) => (cardsRef.current[i] = el)}
-                    style={{
-                        background: "#fff", borderRadius: 22, padding: "32px 24px",
-                        border: `1.5px solid ${f.color}20`,
-                        boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
-                        opacity: 0, transform: "translateY(40px) scale(0.96)",
-                        transition: `all 0.6s cubic-bezier(0.34,1.2,0.64,1) ${i * 80}ms`,
-                        cursor: "default", position: "relative", overflow: "hidden",
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-8px) scale(1.03)";
-                        e.currentTarget.style.boxShadow = `0 20px 50px ${f.color}25`;
-                        e.currentTarget.style.borderColor = f.color;
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.05)";
-                        e.currentTarget.style.borderColor = `${f.color}20`;
-                    }}
+                <div key={f.title} ref={(el) => (cardsRef.current[i] = el)} style={{
+                    background: "#fff", borderRadius: 22, padding: "32px 24px",
+                    border: `1.5px solid ${f.color}20`, boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+                    opacity: 0, transform: "translateY(40px) scale(0.96)",
+                    transition: `all 0.6s cubic-bezier(0.34,1.2,0.64,1) ${i * 80}ms`,
+                    cursor: "default", position: "relative", overflow: "hidden",
+                }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px) scale(1.03)"; e.currentTarget.style.boxShadow = `0 20px 50px ${f.color}25`; e.currentTarget.style.borderColor = f.color; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0) scale(1)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.05)"; e.currentTarget.style.borderColor = `${f.color}20`; }}
                 >
-                    <div style={{
-                        position: "absolute", top: 0, left: 0, right: 0, height: 4,
-                        background: `linear-gradient(90deg, ${f.color}, ${f.color}80)`,
-                        borderRadius: "22px 22px 0 0",
-                    }} />
-                    <div style={{
-                        width: 60, height: 60, borderRadius: 16, background: f.bg,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 28, marginBottom: 18, boxShadow: `0 6px 20px ${f.color}20`,
-                    }}>{f.icon}</div>
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg, ${f.color}, ${f.color}80)`, borderRadius: "22px 22px 0 0" }} />
+                    <div style={{ width: 60, height: 60, borderRadius: 16, background: f.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, marginBottom: 18, boxShadow: `0 6px 20px ${f.color}20` }}>{f.icon}</div>
                     <div style={{ fontWeight: 700, fontSize: 16, color: "#0d3b1e", marginBottom: 8 }}>{f.title}</div>
                     <div style={{ fontSize: 13, color: "#5a7a66", lineHeight: 1.7 }}>{f.desc}</div>
-                    <div style={{
-                        position: "absolute", bottom: 16, right: 16,
-                        width: 8, height: 8, borderRadius: "50%", background: f.color, opacity: 0.4,
-                    }} />
+                    <div style={{ position: "absolute", bottom: 16, right: 16, width: 8, height: 8, borderRadius: "50%", background: f.color, opacity: 0.4 }} />
                 </div>
             ))}
         </div>
@@ -2034,7 +1935,6 @@ function FeatureCards() {
 // ── Specialization Grid ──
 function SpecializationGrid() {
     const gridRef = useRef(null);
-
     useEffect(() => {
         const cards = gridRef.current?.querySelectorAll(".spec-card");
         if (!cards) return;
@@ -2044,24 +1944,18 @@ function SpecializationGrid() {
             card.style.transform = `translateX(${fromLeft ? "-120px" : "120px"}) scale(0.92)`;
             card.style.transition = `transform 0.6s cubic-bezier(0.34,1.2,0.64,1), opacity 0.5s ease`;
         });
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        cards.forEach((card, i) => {
-                            const fromLeft = i < 4;
-                            const staggerIndex = fromLeft ? i : 7 - i;
-                            setTimeout(() => {
-                                card.style.opacity = "1";
-                                card.style.transform = "translateX(0) scale(1)";
-                            }, staggerIndex * 90);
-                        });
-                        observer.unobserve(entry.target);
-                    }
-                });
-            },
-            { threshold: 0.1 }
-        );
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    cards.forEach((card, i) => {
+                        const fromLeft = i < 4;
+                        const staggerIndex = fromLeft ? i : 7 - i;
+                        setTimeout(() => { card.style.opacity = "1"; card.style.transform = "translateX(0) scale(1)"; }, staggerIndex * 90);
+                    });
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
         if (gridRef.current) observer.observe(gridRef.current);
         return () => observer.disconnect();
     }, []);
@@ -2070,41 +1964,19 @@ function SpecializationGrid() {
         <div ref={gridRef} style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 18 }}>
             {specializations.map((s) => (
                 <Link key={s.name} to={`/search?specialization=${s.name}`} style={{ textDecoration: "none" }}>
-                    <div
-                        className="spec-card"
-                        style={{
-                            background: "#fff", borderRadius: 22, padding: "32px 16px 24px",
-                            textAlign: "center", border: "1.5px solid #e0f0e8", cursor: "pointer",
-                            boxShadow: "0 4px 16px rgba(0,0,0,0.05)", position: "relative", overflow: "hidden",
-                            transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s",
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = "translateY(-8px) scale(1.04)";
-                            e.currentTarget.style.boxShadow = `0 20px 50px rgba(26,107,56,0.18)`;
-                            e.currentTarget.style.borderColor = s.accent;
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "translateY(0) scale(1)";
-                            e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.05)";
-                            e.currentTarget.style.borderColor = "#e0f0e8";
-                        }}
+                    <div className="spec-card" style={{
+                        background: "#fff", borderRadius: 22, padding: "32px 16px 24px",
+                        textAlign: "center", border: "1.5px solid #e0f0e8", cursor: "pointer",
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.05)", position: "relative", overflow: "hidden",
+                        transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s",
+                    }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px) scale(1.04)"; e.currentTarget.style.boxShadow = `0 20px 50px rgba(26,107,56,0.18)`; e.currentTarget.style.borderColor = s.accent; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0) scale(1)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.05)"; e.currentTarget.style.borderColor = "#e0f0e8"; }}
                     >
-                        <div style={{
-                            position: "absolute", top: 0, left: 0, right: 0, height: 4,
-                            background: s.accent, borderRadius: "22px 22px 0 0", opacity: 0.7,
-                        }} />
-                        <div style={{
-                            width: 68, height: 68, borderRadius: 20, background: s.bg,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 32, margin: "0 auto 16px", boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
-                        }}>{s.icon}</div>
+                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: s.accent, borderRadius: "22px 22px 0 0", opacity: 0.7 }} />
+                        <div style={{ width: 68, height: 68, borderRadius: 20, background: s.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 16px", boxShadow: "0 6px 20px rgba(0,0,0,0.08)" }}>{s.icon}</div>
                         <p style={{ fontSize: 14, fontWeight: 700, color: "#0d3b1e", margin: "0 0 6px" }}>{s.name}</p>
-                        <div style={{
-                            display: "inline-flex", alignItems: "center", gap: 4,
-                            background: `${s.accent}15`, border: `1px solid ${s.accent}30`,
-                            borderRadius: 50, padding: "3px 10px",
-                            fontSize: 11, fontWeight: 600, color: s.accent,
-                        }}>{s.count} ডাক্তার</div>
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: `${s.accent}15`, border: `1px solid ${s.accent}30`, borderRadius: 50, padding: "3px 10px", fontSize: 11, fontWeight: 600, color: s.accent }}>{s.count} ডাক্তার</div>
                     </div>
                 </Link>
             ))}
@@ -2119,27 +1991,17 @@ function HowItWorks() {
         { icon: "📅", step: "০২", title: "অ্যাপয়েন্টমেন্ট নিন", desc: "আপনার সুবিধামতো সময় ও তারিখ বেছে নিয়ে বুকিং করুন", color: "#1565c0", bg: "#e3f2fd", to: "/search", btnLabel: "বুকিং করুন →" },
         { icon: "💊", step: "০৩", title: "পরামর্শ ও চিকিৎসা", desc: "সরাসরি বা অনলাইনে ডাক্তারের পরামর্শ নিন এবং সুস্থ থাকুন", color: "#ad1457", bg: "#fce4ec", to: "/search?mode=online", btnLabel: "পরামর্শ নিন →" },
     ];
-
     const sectionRef = useRef(null);
     const stepsRef = useRef([]);
-
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        stepsRef.current.forEach((el, i) => {
-                            if (el) setTimeout(() => {
-                                el.style.opacity = "1";
-                                el.style.transform = "translateY(0)";
-                            }, i * 150);
-                        });
-                        observer.unobserve(entry.target);
-                    }
-                });
-            },
-            { threshold: 0.2 }
-        );
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    stepsRef.current.forEach((el, i) => { if (el) setTimeout(() => { el.style.opacity = "1"; el.style.transform = "translateY(0)"; }, i * 150); });
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
         if (sectionRef.current) observer.observe(sectionRef.current);
         return () => observer.disconnect();
     }, []);
@@ -2147,76 +2009,35 @@ function HowItWorks() {
     return (
         <div ref={sectionRef} style={{ marginBottom: 72 }}>
             <div style={{ textAlign: "center", marginBottom: 40 }}>
-                <span style={{
-                    display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56",
-                    border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px",
-                    fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12,
-                }}>কিভাবে কাজ করে</span>
+                <span style={{ display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56", border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12 }}>কিভাবে কাজ করে</span>
                 <h2 style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 28, fontWeight: 800, color: "#0d3b1e", marginBottom: 8 }}>মাত্র ৩টি সহজ ধাপে</h2>
                 <p style={{ color: "#5a7a66", fontSize: 14 }}>শুরু থেকে চিকিৎসা পর্যন্ত — সবকিছু এক জায়গায়</p>
                 <div style={{ width: 48, height: 4, background: "linear-gradient(90deg, #2e9e56, #5ecb87)", borderRadius: 4, margin: "12px auto 0" }} />
             </div>
-
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, position: "relative" }}>
-                <div style={{
-                    position: "absolute", top: 52, left: "16.5%", right: "16.5%", height: 2,
-                    background: "linear-gradient(90deg, #2e7d32, #1565c0, #ad1457)",
-                    opacity: 0.2, zIndex: 0,
-                }} />
+                <div style={{ position: "absolute", top: 52, left: "16.5%", right: "16.5%", height: 2, background: "linear-gradient(90deg, #2e7d32, #1565c0, #ad1457)", opacity: 0.2, zIndex: 0 }} />
                 {steps.map((s, i) => (
-                    <div
-                        key={s.step}
-                        ref={(el) => (stepsRef.current[i] = el)}
-                        style={{
-                            background: "#fff", borderRadius: 24, padding: "36px 24px 28px",
-                            border: `1.5px solid ${s.color}18`,
-                            boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
-                            textAlign: "center", position: "relative", zIndex: 1,
-                            opacity: 0, transform: "translateY(30px)",
-                            transition: `all 0.6s cubic-bezier(0.34,1.2,0.64,1) ${i * 150}ms`,
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = "translateY(-8px)";
-                            e.currentTarget.style.boxShadow = `0 20px 50px ${s.color}20`;
-                            e.currentTarget.style.borderColor = s.color;
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.05)";
-                            e.currentTarget.style.borderColor = `${s.color}18`;
-                        }}
+                    <div key={s.step} ref={(el) => (stepsRef.current[i] = el)} style={{
+                        background: "#fff", borderRadius: 24, padding: "36px 24px 28px",
+                        border: `1.5px solid ${s.color}18`, boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+                        textAlign: "center", position: "relative", zIndex: 1,
+                        opacity: 0, transform: "translateY(30px)",
+                        transition: `all 0.6s cubic-bezier(0.34,1.2,0.64,1) ${i * 150}ms`,
+                    }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = `0 20px 50px ${s.color}20`; e.currentTarget.style.borderColor = s.color; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.05)"; e.currentTarget.style.borderColor = `${s.color}18`; }}
                     >
-                        <div style={{
-                            position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)",
-                            background: s.color, color: "#fff", borderRadius: 50,
-                            width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 12, fontWeight: 700, boxShadow: `0 4px 12px ${s.color}40`,
-                        }}>{i + 1}</div>
-                        <div style={{
-                            width: 80, height: 80, borderRadius: 24, background: s.bg,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 36, margin: "0 auto 20px", boxShadow: `0 8px 24px ${s.color}20`,
-                        }}>{s.icon}</div>
+                        <div style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)", background: s.color, color: "#fff", borderRadius: 50, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, boxShadow: `0 4px 12px ${s.color}40` }}>{i + 1}</div>
+                        <div style={{ width: 80, height: 80, borderRadius: 24, background: s.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 20px", boxShadow: `0 8px 24px ${s.color}20` }}>{s.icon}</div>
                         <p style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 17, fontWeight: 800, color: "#0d3b1e", marginBottom: 10 }}>{s.title}</p>
                         <p style={{ fontSize: 13, color: "#5a7a66", lineHeight: 1.7, margin: "0 0 20px" }}>{s.desc}</p>
                         <Link to={s.to} style={{ textDecoration: "none" }}>
-                            <div
-                                style={{
-                                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                    background: s.color, color: "#fff", borderRadius: 50,
-                                    padding: "11px 22px", fontSize: 13, fontWeight: 700, cursor: "pointer",
-                                    boxShadow: `0 4px 14px ${s.color}40`, transition: "all 0.2s ease",
-                                    fontFamily: "'Hind Siliguri', sans-serif",
-                                }}
+                            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: s.color, color: "#fff", borderRadius: 50, padding: "11px 22px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: `0 4px 14px ${s.color}40`, transition: "all 0.2s ease", fontFamily: "'Hind Siliguri', sans-serif" }}
                                 onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.07)"; }}
                                 onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
                             >{s.btnLabel}</div>
                         </Link>
-                        <div style={{
-                            marginTop: 16, display: "inline-flex", alignItems: "center", gap: 4,
-                            background: `${s.color}12`, border: `1px solid ${s.color}25`,
-                            borderRadius: 50, padding: "4px 14px", fontSize: 11, fontWeight: 600, color: s.color,
-                        }}>ধাপ {s.step}</div>
+                        <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 4, background: `${s.color}12`, border: `1px solid ${s.color}25`, borderRadius: 50, padding: "4px 14px", fontSize: 11, fontWeight: 600, color: s.color }}>ধাপ {s.step}</div>
                     </div>
                 ))}
             </div>
@@ -2228,24 +2049,15 @@ function HowItWorks() {
 function Testimonials() {
     const sectionRef = useRef(null);
     const cardsRef = useRef([]);
-
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        cardsRef.current.forEach((el, i) => {
-                            if (el) setTimeout(() => {
-                                el.style.opacity = "1";
-                                el.style.transform = "translateY(0) scale(1)";
-                            }, i * 100);
-                        });
-                        observer.unobserve(entry.target);
-                    }
-                });
-            },
-            { threshold: 0.1 }
-        );
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    cardsRef.current.forEach((el, i) => { if (el) setTimeout(() => { el.style.opacity = "1"; el.style.transform = "translateY(0) scale(1)"; }, i * 100); });
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
         if (sectionRef.current) observer.observe(sectionRef.current);
         return () => observer.disconnect();
     }, []);
@@ -2253,52 +2065,27 @@ function Testimonials() {
     return (
         <div ref={sectionRef} style={{ marginBottom: 72 }}>
             <div style={{ textAlign: "center", marginBottom: 40 }}>
-                <span style={{
-                    display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56",
-                    border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px",
-                    fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12,
-                }}>রোগীর কথা</span>
+                <span style={{ display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56", border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12 }}>রোগীর কথা</span>
                 <h2 style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 28, fontWeight: 800, color: "#0d3b1e", marginBottom: 8 }}>তারা কী বলছেন</h2>
                 <p style={{ color: "#5a7a66", fontSize: 14 }}>হাজারো সন্তুষ্ট রোগীর মধ্যে কিছু অভিজ্ঞতা</p>
                 <div style={{ width: 48, height: 4, background: "linear-gradient(90deg, #2e9e56, #5ecb87)", borderRadius: 4, margin: "12px auto 0" }} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
                 {testimonials.map((t, i) => (
-                    <div
-                        key={t.name}
-                        ref={(el) => (cardsRef.current[i] = el)}
-                        style={{
-                            background: "#fff", borderRadius: 22, padding: "28px 24px",
-                            border: `1.5px solid ${t.color}18`,
-                            boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
-                            opacity: 0, transform: "translateY(30px) scale(0.97)",
-                            transition: `all 0.55s cubic-bezier(0.34,1.2,0.64,1) ${i * 100}ms`,
-                            position: "relative",
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = "translateY(-6px) scale(1.02)";
-                            e.currentTarget.style.boxShadow = `0 16px 40px ${t.color}20`;
-                            e.currentTarget.style.borderColor = t.color;
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "translateY(0) scale(1)";
-                            e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.05)";
-                            e.currentTarget.style.borderColor = `${t.color}18`;
-                        }}
+                    <div key={t.name} ref={(el) => (cardsRef.current[i] = el)} style={{
+                        background: "#fff", borderRadius: 22, padding: "28px 24px",
+                        border: `1.5px solid ${t.color}18`, boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
+                        opacity: 0, transform: "translateY(30px) scale(0.97)",
+                        transition: `all 0.55s cubic-bezier(0.34,1.2,0.64,1) ${i * 100}ms`, position: "relative",
+                    }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-6px) scale(1.02)"; e.currentTarget.style.boxShadow = `0 16px 40px ${t.color}20`; e.currentTarget.style.borderColor = t.color; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0) scale(1)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.05)"; e.currentTarget.style.borderColor = `${t.color}18`; }}
                     >
-                        <div style={{
-                            position: "absolute", top: 16, right: 20,
-                            fontSize: 48, color: `${t.color}15`, lineHeight: 1,
-                            fontFamily: "Georgia, serif", fontWeight: 900,
-                        }}>"</div>
+                        <div style={{ position: "absolute", top: 16, right: 20, fontSize: 48, color: `${t.color}15`, lineHeight: 1, fontFamily: "Georgia, serif", fontWeight: 900 }}>"</div>
                         <div style={{ fontSize: 14, marginBottom: 14, color: "#f0c040" }}>{"★".repeat(t.rating)}</div>
                         <p style={{ fontSize: 14, color: "#3a5a46", lineHeight: 1.8, marginBottom: 20, fontStyle: "italic" }}>"{t.text}"</p>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <div style={{
-                                width: 42, height: 42, borderRadius: "50%", background: t.bg,
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                fontSize: 16, fontWeight: 700, color: t.color, border: `2px solid ${t.color}30`,
-                            }}>{t.avatar}</div>
+                            <div style={{ width: 42, height: 42, borderRadius: "50%", background: t.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: t.color, border: `2px solid ${t.color}30` }}>{t.avatar}</div>
                             <div>
                                 <p style={{ fontSize: 14, fontWeight: 700, color: "#0d3b1e", margin: 0 }}>{t.name}</p>
                                 <p style={{ fontSize: 12, color: "#5a7a66", margin: 0 }}>📍 {t.city}</p>
@@ -2315,24 +2102,15 @@ function Testimonials() {
 function FeaturedDoctors() {
     const sectionRef = useRef(null);
     const cardsRef = useRef([]);
-
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        cardsRef.current.forEach((el, i) => {
-                            if (el) setTimeout(() => {
-                                el.style.opacity = "1";
-                                el.style.transform = "translateY(0)";
-                            }, i * 120);
-                        });
-                        observer.unobserve(entry.target);
-                    }
-                });
-            },
-            { threshold: 0.1 }
-        );
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    cardsRef.current.forEach((el, i) => { if (el) setTimeout(() => { el.style.opacity = "1"; el.style.transform = "translateY(0)"; }, i * 120); });
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
         if (sectionRef.current) observer.observe(sectionRef.current);
         return () => observer.disconnect();
     }, []);
@@ -2340,50 +2118,25 @@ function FeaturedDoctors() {
     return (
         <div ref={sectionRef} style={{ marginBottom: 72 }}>
             <div style={{ textAlign: "center", marginBottom: 40 }}>
-                <span style={{
-                    display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56",
-                    border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px",
-                    fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12,
-                }}>বিশেষজ্ঞ দল</span>
+                <span style={{ display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56", border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12 }}>বিশেষজ্ঞ দল</span>
                 <h2 style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 28, fontWeight: 800, color: "#0d3b1e", marginBottom: 8 }}>জনপ্রিয় ডাক্তারগণ</h2>
                 <p style={{ color: "#5a7a66", fontSize: 14 }}>আমাদের সর্বোচ্চ রেটিংপ্রাপ্ত বিশেষজ্ঞ ডাক্তারদের সাথে পরিচিত হন</p>
                 <div style={{ width: 48, height: 4, background: "linear-gradient(90deg, #2e9e56, #5ecb87)", borderRadius: 4, margin: "12px auto 0" }} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
                 {featuredDoctors.map((d, i) => (
-                    <div
-                        key={d.name}
-                        ref={(el) => (cardsRef.current[i] = el)}
-                        style={{
-                            background: "#fff", borderRadius: 22, padding: "28px 20px 24px",
-                            border: `1.5px solid ${d.color}18`,
-                            boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
-                            textAlign: "center", opacity: 0, transform: "translateY(30px)",
-                            transition: `all 0.6s cubic-bezier(0.34,1.2,0.64,1) ${i * 120}ms`,
-                            cursor: "pointer", position: "relative", overflow: "hidden",
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = "translateY(-8px)";
-                            e.currentTarget.style.boxShadow = `0 20px 50px ${d.color}25`;
-                            e.currentTarget.style.borderColor = d.color;
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.05)";
-                            e.currentTarget.style.borderColor = `${d.color}18`;
-                        }}
+                    <div key={d.name} ref={(el) => (cardsRef.current[i] = el)} style={{
+                        background: "#fff", borderRadius: 22, padding: "28px 20px 24px",
+                        border: `1.5px solid ${d.color}18`, boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
+                        textAlign: "center", opacity: 0, transform: "translateY(30px)",
+                        transition: `all 0.6s cubic-bezier(0.34,1.2,0.64,1) ${i * 120}ms`,
+                        cursor: "pointer", position: "relative", overflow: "hidden",
+                    }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = `0 20px 50px ${d.color}25`; e.currentTarget.style.borderColor = d.color; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.05)"; e.currentTarget.style.borderColor = `${d.color}18`; }}
                     >
-                        <div style={{
-                            position: "absolute", top: 0, left: 0, right: 0, height: 4,
-                            background: d.color, borderRadius: "22px 22px 0 0", opacity: 0.7,
-                        }} />
-                        <div style={{
-                            width: 72, height: 72, borderRadius: "50%", background: d.bg,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 26, fontWeight: 700, color: d.color,
-                            margin: "0 auto 16px", border: `3px solid ${d.color}30`,
-                            boxShadow: `0 8px 24px ${d.color}25`,
-                        }}>{d.avatar}</div>
+                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: d.color, borderRadius: "22px 22px 0 0", opacity: 0.7 }} />
+                        <div style={{ width: 72, height: 72, borderRadius: "50%", background: d.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, fontWeight: 700, color: d.color, margin: "0 auto 16px", border: `3px solid ${d.color}30`, boxShadow: `0 8px 24px ${d.color}25` }}>{d.avatar}</div>
                         <p style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 15, fontWeight: 800, color: "#0d3b1e", margin: "0 0 4px" }}>{d.name}</p>
                         <p style={{ fontSize: 12, color: "#5a7a66", margin: "0 0 16px" }}>{d.spec}</p>
                         <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
@@ -2392,12 +2145,7 @@ function FeaturedDoctors() {
                         </div>
                         <div style={{ fontSize: 11, color: "#5a7a66", marginBottom: 16 }}>অভিজ্ঞতা: {d.exp}</div>
                         <Link to={`/search?specialization=${d.spec}`} style={{ textDecoration: "none" }}>
-                            <div
-                                style={{
-                                    background: d.color, color: "#fff", borderRadius: 50,
-                                    padding: "10px 20px", fontSize: 13, fontWeight: 700,
-                                    transition: "all 0.2s ease", boxShadow: `0 4px 14px ${d.color}40`,
-                                }}
+                            <div style={{ background: d.color, color: "#fff", borderRadius: 50, padding: "10px 20px", fontSize: 13, fontWeight: 700, transition: "all 0.2s ease", boxShadow: `0 4px 14px ${d.color}40` }}
                                 onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; e.currentTarget.style.transform = "scale(1.05)"; }}
                                 onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "scale(1)"; }}
                             >অ্যাপয়েন্টমেন্ট নিন</div>
@@ -2407,13 +2155,7 @@ function FeaturedDoctors() {
             </div>
             <div style={{ textAlign: "center", marginTop: 32 }}>
                 <Link to="/search" style={{ textDecoration: "none" }}>
-                    <div
-                        style={{
-                            display: "inline-flex", alignItems: "center", gap: 8,
-                            background: "transparent", color: "#2e9e56",
-                            border: "2px solid #2e9e56", borderRadius: 50,
-                            padding: "12px 28px", fontSize: 14, fontWeight: 700, transition: "all 0.2s ease",
-                        }}
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "transparent", color: "#2e9e56", border: "2px solid #2e9e56", borderRadius: 50, padding: "12px 28px", fontSize: 14, fontWeight: 700, transition: "all 0.2s ease" }}
                         onMouseEnter={(e) => { e.currentTarget.style.background = "#2e9e56"; e.currentTarget.style.color = "#fff"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#2e9e56"; }}
                     >সকল ডাক্তার দেখুন →</div>
@@ -2425,6 +2167,8 @@ function FeaturedDoctors() {
 
 // ── Home ──
 function Home() {
+    useWelcomeVoice(); // ✅ Home mount/revisit হলে Bengali voice বাজবে
+
     return (
         <div style={{ fontFamily: "'Hind Siliguri', sans-serif", background: "#f7fbf9", minHeight: "100vh" }}>
             <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@700;800;900&display=swap" rel="stylesheet" />
@@ -2435,43 +2179,18 @@ function Home() {
                 background: "linear-gradient(160deg, #062210 0%, #0d3b1e 40%, #1a6b38 80%, #2e9e56 100%)",
                 padding: "80px 24px 100px", textAlign: "center", overflow: "hidden",
             }}>
-                <div style={{
-                    position: "absolute", inset: 0,
-                    backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
-                    backgroundSize: "60px 60px", pointerEvents: "none",
-                }} />
-                <div style={{
-                    position: "absolute", width: 500, height: 500, borderRadius: "50%",
-                    background: "radial-gradient(circle, rgba(94,203,135,0.12) 0%, transparent 70%)",
-                    top: -150, right: -150, pointerEvents: "none",
-                }} />
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)", backgroundSize: "60px 60px", pointerEvents: "none" }} />
+                <div style={{ position: "absolute", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(94,203,135,0.12) 0%, transparent 70%)", top: -150, right: -150, pointerEvents: "none" }} />
 
                 <div style={{ position: "relative", zIndex: 2, maxWidth: 720, margin: "0 auto" }}>
-                    <div style={{
-                        display: "inline-flex", alignItems: "center", gap: 8,
-                        background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.18)",
-                        borderRadius: 50, padding: "7px 18px", fontSize: 13, color: "#a8e6c0",
-                        marginBottom: 28, backdropFilter: "blur(8px)",
-                    }}>
-                        <span style={{
-                            width: 7, height: 7, borderRadius: "50%",
-                            background: "#5ecb87", boxShadow: "0 0 8px #5ecb87", display: "inline-block",
-                        }} />
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 50, padding: "7px 18px", fontSize: 13, color: "#a8e6c0", marginBottom: 28, backdropFilter: "blur(8px)" }}>
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#5ecb87", boxShadow: "0 0 8px #5ecb87", display: "inline-block" }} />
                         বাংলাদেশের নির্ভরযোগ্য স্বাস্থ্যসেবা প্ল্যাটফর্ম
                     </div>
 
-                    <h1 style={{
-                        fontFamily: "'Noto Serif Bengali', serif",
-                        fontSize: "clamp(2.6rem, 6vw, 4.6rem)",
-                        fontWeight: 900, color: "#fff", lineHeight: 1.15,
-                        letterSpacing: "-1px", marginBottom: 16,
-                        textShadow: "0 2px 12px rgba(0,0,0,0.2)",
-                    }}>
+                    <h1 style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: "clamp(2.6rem, 6vw, 4.6rem)", fontWeight: 900, color: "#fff", lineHeight: 1.15, letterSpacing: "-1px", marginBottom: 16, textShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
                         সঠিক ডাক্তার,{" "}
-                        <span style={{
-                            background: "linear-gradient(135deg, #5ecb87, #f0c040)",
-                            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                        }}>সঠিক সময়ে</span>
+                        <span style={{ background: "linear-gradient(135deg, #5ecb87, #f0c040)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>সঠিক সময়ে</span>
                     </h1>
 
                     <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 17, marginBottom: 40, lineHeight: 1.7 }}>
@@ -2483,7 +2202,6 @@ function Home() {
                         <SearchBar />
                     </div>
 
-                    {/* ✅ Live Stats Counter replaces static stats */}
                     <LiveStatsCounter />
                 </div>
             </section>
@@ -2498,70 +2216,48 @@ function Home() {
             {/* CONTENT */}
             <div style={{ maxWidth: 1060, margin: "0 auto", padding: "64px 24px 80px" }}>
 
-                {/* Features */}
                 <div style={{ textAlign: "center", marginBottom: 40 }}>
-                    <span style={{
-                        display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56",
-                        border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px",
-                        fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12,
-                    }}>কেন আমরা</span>
+                    <span style={{ display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56", border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12 }}>কেন আমরা</span>
                     <h2 style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 28, fontWeight: 800, color: "#0d3b1e", marginBottom: 8 }}>আমাদের বিশেষত্ব</h2>
                     <p style={{ color: "#5a7a66", fontSize: 14 }}>স্বাস্থ্য খোঁজি কেন বাংলাদেশের সেরা স্বাস্থ্যসেবা প্ল্যাটফর্ম</p>
                     <div style={{ width: 48, height: 4, background: "linear-gradient(90deg, #2e9e56, #5ecb87)", borderRadius: 4, margin: "12px auto 0" }} />
                 </div>
+
                 <FeatureCards />
-
                 <HowItWorks />
-
-                {/* ✅ AI Symptom Checker — after How It Works */}
                 <AISymptomChecker />
 
-                {/* Specializations */}
                 <div style={{ textAlign: "center", marginBottom: 40 }}>
-                    <span style={{
-                        display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56",
-                        border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px",
-                        fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12,
-                    }}>বিভাগসমূহ</span>
+                    <span style={{ display: "inline-block", background: "rgba(46,158,86,0.1)", color: "#2e9e56", border: "1px solid rgba(46,158,86,0.25)", borderRadius: 50, padding: "5px 16px", fontSize: 12, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 12 }}>বিভাগসমূহ</span>
                     <h2 style={{ fontFamily: "'Noto Serif Bengali', serif", fontSize: 28, fontWeight: 800, color: "#0d3b1e", marginBottom: 8 }}>বিশেষজ্ঞতা অনুযায়ী খুঁজুন</h2>
                     <p style={{ color: "#5a7a66", fontSize: 14 }}>আপনার প্রয়োজন অনুযায়ী বিভাগ বেছে নিন</p>
                     <div style={{ width: 48, height: 4, background: "linear-gradient(90deg, #2e9e56, #5ecb87)", borderRadius: 4, margin: "12px auto 0" }} />
                 </div>
-                <div style={{ marginBottom: 72 }}>
-                    <SpecializationGrid />
-                </div>
+                <div style={{ marginBottom: 72 }}><SpecializationGrid /></div>
 
                 <FeaturedDoctors />
                 <Testimonials />
 
-                {/* CTA Banner */}
+                {/* CTA */}
                 <div style={{
                     background: "linear-gradient(135deg, #0d3b1e 0%, #1a6b38 100%)",
                     borderRadius: 24, padding: "44px 40px",
-                    display: "flex", alignItems: "center",
-                    justifyContent: "space-between", flexWrap: "wrap", gap: 20,
-                    boxShadow: "0 20px 60px rgba(13,59,30,0.3)",
-                    position: "relative", overflow: "hidden",
+                    display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20,
+                    boxShadow: "0 20px 60px rgba(13,59,30,0.3)", position: "relative", overflow: "hidden",
                 }}>
-                    <div style={{
-                        position: "absolute", right: 160, top: "50%", transform: "translateY(-50%)",
-                        fontSize: 110, opacity: 0.06, pointerEvents: "none",
-                    }}>🏥</div>
+                    <div style={{ position: "absolute", right: 160, top: "50%", transform: "translateY(-50%)", fontSize: 110, opacity: 0.06, pointerEvents: "none" }}>🏥</div>
                     <div style={{ position: "relative" }}>
                         <h3 style={{ fontFamily: "'Noto Serif Bengali', serif", color: "#fff", fontSize: 22, fontWeight: 800, marginBottom: 6 }}>জরুরি সাহায্য দরকার?</h3>
                         <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>আমাদের হেল্পলাইনে যোগাযোগ করুন — ২৪ ঘণ্টা, ৭ দিন</p>
                     </div>
                     <a href="tel:16000" style={{
                         background: "#fff", color: "#0d3b1e", padding: "14px 32px", borderRadius: 50,
-                        fontWeight: 700, fontSize: 16, textDecoration: "none",
-                        flexShrink: 0, boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
-                        display: "inline-flex", alignItems: "center", gap: 8, transition: "all 0.2s ease",
+                        fontWeight: 700, fontSize: 16, textDecoration: "none", flexShrink: 0,
+                        boxShadow: "0 8px 24px rgba(0,0,0,0.2)", display: "inline-flex", alignItems: "center", gap: 8, transition: "all 0.2s ease",
                     }}
                         onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.3)"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)"; }}
-                    >
-                        📞 ১৬০০০ তে কল করুন
-                    </a>
+                    >📞 ১৬০০০ তে কল করুন</a>
                 </div>
             </div>
         </div>
