@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
-export function useWelcomeVoice(shouldPlay) {
+// default export — Home.jsx এ: import useWelcomeVoice from "../hooks/useWelcomeVoice"
+export default function useWelcomeVoice(shouldPlay) {
     useEffect(() => {
         if (!shouldPlay) return;
         if (!window.speechSynthesis) return;
@@ -21,7 +22,7 @@ export function useWelcomeVoice(shouldPlay) {
             // Bengali → Hindi → English → যেকোনো একটা
             const preferred =
                 voices.find((v) => v.lang.startsWith("bn")) ||
-                voices.find((v) => v.lang.startsWith("hi")) ||
+                voices.find((v) => v.lang === "hi-IN") ||
                 voices.find((v) => v.lang.startsWith("en")) ||
                 voices[0] ||
                 null;
@@ -30,7 +31,6 @@ export function useWelcomeVoice(shouldPlay) {
                 utter.voice = preferred;
                 utter.lang = preferred.lang;
             } else {
-                // কোনো voice না পেলেও try করো
                 utter.lang = "en-US";
             }
 
