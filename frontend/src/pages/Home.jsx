@@ -2337,7 +2337,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useRef, useState, useContext } from "react";
 import SearchBar from "../components/SearchBar";
 import { AuthContext } from "../context/AuthContext";
-import { useWelcomeVoice } from "../hooks/useWelcomeVoice"; // ✅ named import
+import useWelcomeVoice from "../hooks/useWelcomeVoice";// ✅ named import
 
 const specializations = [
     { name: "মেডিসিন", icon: "💊", bg: "linear-gradient(135deg, #e8f5e9, #c8e6c9)", accent: "#2e7d32", count: "১২০+" },

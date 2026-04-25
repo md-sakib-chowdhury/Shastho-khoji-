@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 
 export function useWelcomeVoice(shouldPlay) {
@@ -13,18 +12,27 @@ export function useWelcomeVoice(shouldPlay) {
             window.speechSynthesis.cancel();
 
             const utter = new SpeechSynthesisUtterance(message);
-            utter.lang = "bn-BD";
             utter.rate = 0.85;
             utter.pitch = 1;
             utter.volume = 1;
 
             const voices = window.speechSynthesis.getVoices();
+
+            // Bengali → Hindi → English → যেকোনো একটা
             const preferred =
                 voices.find((v) => v.lang.startsWith("bn")) ||
                 voices.find((v) => v.lang.startsWith("hi")) ||
-                voices[0];
+                voices.find((v) => v.lang.startsWith("en")) ||
+                voices[0] ||
+                null;
 
-            if (preferred) utter.voice = preferred;
+            if (preferred) {
+                utter.voice = preferred;
+                utter.lang = preferred.lang;
+            } else {
+                // কোনো voice না পেলেও try করো
+                utter.lang = "en-US";
+            }
 
             window.speechSynthesis.speak(utter);
         };
@@ -37,7 +45,7 @@ export function useWelcomeVoice(shouldPlay) {
                 window.speechSynthesis.onvoiceschanged = null;
                 doSpeak();
             };
-            const fallback = setTimeout(doSpeak, 300);
+            const fallback = setTimeout(doSpeak, 500);
             return () => clearTimeout(fallback);
         }
     }, [shouldPlay]);
