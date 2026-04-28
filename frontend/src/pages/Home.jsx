@@ -3123,8 +3123,10 @@ function WelcomeVoicePopup({ onClose }) {
         if (window.speechSynthesis) {
             window.speechSynthesis.cancel();
             const utter = new SpeechSynthesisUtterance(
-                "Welcome to Swasthya Khoji. Find your preferred doctor easily and quickly."
+                "Welcome to Swasthya Khoji. Find your preferred doctor easily and quickly. " +
+                "Tomar doctor khojo taratari."
             );
+
             utter.lang = "en-US";
             utter.rate = 0.9;
             utter.pitch = 1.05;
