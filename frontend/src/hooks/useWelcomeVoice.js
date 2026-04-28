@@ -1,37 +1,35 @@
 import { useEffect } from "react";
 
-// default export — Home.jsx এ: import useWelcomeVoice from "../hooks/useWelcomeVoice"
 export default function useWelcomeVoice(shouldPlay) {
     useEffect(() => {
         if (!shouldPlay) return;
         if (!window.speechSynthesis) return;
 
         const message =
-            "স্বাস্থ্য খোঁজিতে আপনাকে স্বাগতম। আপনার পছন্দের ডাক্তার খুঁজুন সহজেই।";
+            "Welcome to Swasthya Khoji. Find your preferred doctor easily and quickly.";
 
         const doSpeak = () => {
             window.speechSynthesis.cancel();
 
             const utter = new SpeechSynthesisUtterance(message);
-            utter.rate = 0.85;
-            utter.pitch = 1;
+            utter.lang = "en-US";
+            utter.rate = 0.9;
+            utter.pitch = 1.05;
             utter.volume = 1;
 
             const voices = window.speechSynthesis.getVoices();
 
-            // Bengali → Hindi → English → যেকোনো একটা
             const preferred =
-                voices.find((v) => v.lang.startsWith("bn")) ||
-                voices.find((v) => v.lang === "hi-IN") ||
+                voices.find((v) => v.name.includes("Google US English")) ||
+                voices.find((v) => v.name.includes("Samantha")) ||
+                voices.find((v) => v.name.includes("Karen")) ||
+                voices.find((v) => v.lang === "en-US" && v.localService) ||
+                voices.find((v) => v.lang === "en-US") ||
                 voices.find((v) => v.lang.startsWith("en")) ||
-                voices[0] ||
                 null;
 
             if (preferred) {
                 utter.voice = preferred;
-                utter.lang = preferred.lang;
-            } else {
-                utter.lang = "en-US";
             }
 
             window.speechSynthesis.speak(utter);
