@@ -1,16 +1,3 @@
-<!-- <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html> -->
 <!DOCTYPE html>
 <html lang="bn">
 
@@ -23,17 +10,6 @@
 
 <body>
   <div id="root"></div>
-
-  <!-- ১. এই অংশটি Vite-এর Fast Refresh-এর জন্য ঠিক আছে -->
-  <script type="module">
-    import RefreshRuntime from 'http://localhost:5173/@react-refresh'
-    RefreshRuntime.injectIntoGlobalHook(window)
-    window.$RefreshReg$ = () => { }
-    window.$RefreshSig$ = () => (type) => type
-    window.__vite_plugin_react_preamble_installed__ = true
-  </script>
-
-  <!-- ২. আসল সমস্যা এখানে ছিল। নিচের লাইনটি থেকে কমেন্ট সরিয়ে দিন -->
   <script type="module" src="/src/main.jsx"></script>
 </body>
 
