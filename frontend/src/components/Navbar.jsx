@@ -35,13 +35,44 @@ function Navbar() {
                 }
 
                 .nav-inner {
-                    max-width: 1100px;
                     margin: 0 auto;
                     padding: 0 28px;
                     height: 64px;
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
+                }
+
+                /* Desktop বড় (1280px+) */
+                @media (min-width: 1280px) {
+                    .nav-inner { max-width: 1280px; padding: 0 40px; }
+                    .nav-brand-title { font-size: 22px; }
+                    .nav-links-row a { font-size: 15px; padding: 9px 16px; }
+                }
+
+                /* Laptop 14 inch (1024px - 1279px) */
+                @media (min-width: 1024px) and (max-width: 1279px) {
+                    .nav-inner { max-width: 1100px; padding: 0 28px; }
+                    .nav-brand-title { font-size: 20px; }
+                    .nav-links-row a { font-size: 13.5px; padding: 8px 12px; }
+                }
+
+                /* Tablet (768px - 1023px) */
+                @media (min-width: 768px) and (max-width: 1023px) {
+                    .nav-inner { padding: 0 20px; height: 60px; }
+                    .nav-brand-title { font-size: 18px; }
+                    .nav-links-row { gap: 1px; }
+                    .nav-links-row a { font-size: 12.5px; padding: 7px 9px; }
+                    .nav-cta-btn { padding: 7px 14px !important; font-size: 12.5px !important; }
+                    .nav-logout-btn { padding: 6px 12px; font-size: 12.5px; }
+                    .nav-user-name { font-size: 12px; padding: 0 4px; }
+                }
+
+                /* Mobile (max 767px) */
+                @media (max-width: 767px) {
+                    .nav-inner { padding: 0 16px; height: 56px; }
+                    .nav-brand-title { font-size: 17px; }
+                    .nav-logo-box { width: 34px; height: 34px; font-size: 16px; }
                 }
 
                 .nav-brand {
@@ -155,6 +186,7 @@ function Navbar() {
                     background: rgba(249,199,79,0.2) !important;
                 }
 
+                /* Hamburger - শুধু tablet ও mobile এ */
                 .nav-hamburger {
                     display: none;
                     background: none;
@@ -172,6 +204,25 @@ function Navbar() {
 
                 .nav-hamburger:hover { background: rgba(255,255,255,0.08); }
 
+                /* Desktop বড় ও Laptop 14 → links দেখাবে */
+                @media (min-width: 1024px) {
+                    .nav-links-row { display: flex; }
+                    .nav-hamburger { display: none !important; }
+                }
+
+                /* Tablet → hamburger দেখাবে */
+                @media (min-width: 768px) and (max-width: 1023px) {
+                    .nav-links-row { display: none; }
+                    .nav-hamburger { display: flex; }
+                }
+
+                /* Mobile → hamburger দেখাবে */
+                @media (max-width: 767px) {
+                    .nav-links-row { display: none; }
+                    .nav-hamburger { display: flex; width: 34px; height: 34px; }
+                }
+
+                /* Mobile Drawer */
                 .nav-mobile-drawer {
                     background: #0d3b1e;
                     border-top: 1px solid rgba(255,255,255,0.06);
@@ -192,6 +243,12 @@ function Navbar() {
                 }
 
                 .nav-mobile-drawer a:hover { background: rgba(255,255,255,0.07); color: #fff; }
+
+                /* Tablet drawer এ একটু ছোট */
+                @media (min-width: 768px) and (max-width: 1023px) {
+                    .nav-mobile-drawer { padding: 10px 24px 18px; }
+                    .nav-mobile-drawer a { font-size: 14px; padding: 10px 14px; }
+                }
 
                 .mob-cta {
                     margin-top: 8px;
@@ -219,11 +276,6 @@ function Navbar() {
                 }
 
                 .mob-logout:hover { background: rgba(255,100,100,0.1); }
-
-                @media (max-width: 720px) {
-                    .nav-links-row { display: none; }
-                    .nav-hamburger { display: flex; }
-                }
             `}</style>
 
             <nav className="nav-root">
